@@ -171,21 +171,31 @@ const updateIssueStatus = async (req, res) => {
 // Subjects CRUD
 const addSubject = async (req, res) => {
     try {
-        const { name, code, credits, assignedFaculty } = req.body;
+        const { name, code, credits, faculty, assignedFaculty } = req.body;
+        const effectiveFaculty = faculty || assignedFaculty || '';
+
+        if (!name || !code || !credits) {
+            return res.status(400).json({ message: 'Subject name, code, and credits are required.' });
+        }
+
         const { rows } = await db.query(
             'INSERT INTO subjects (name, code, credits, assigned_faculty) VALUES ($1, $2, $3, $4) RETURNING *',
-            [name, code, credits, assignedFaculty]
+            [name.trim(), code.trim(), parseInt(credits, 10), effectiveFaculty.trim()]
         );
-        res.status(201).json({ message: 'Subject added successfully', subject: rows[0] });
+        const subj = rows[0];
+        res.status(201).json({ message: 'Subject added successfully', subject: { ...subj, faculty: subj.assigned_faculty } });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Server error' });
+        console.error('Error adding subject:', error);
+        if (error.code === '23505') {
+            return res.status(400).json({ message: `Subject code '${req.body.code}' already exists.` });
+        }
+        res.status(500).json({ message: 'Server error while adding subject' });
     }
 };
 
 const getSubjects = async (req, res) => {
     try {
-        const { rows } = await db.query('SELECT * FROM subjects ORDER BY name ASC');
+        const { rows } = await db.query('SELECT id, name, code, credits, assigned_faculty AS faculty, created_at FROM subjects ORDER BY name ASC');
         res.json(rows);
     } catch (error) {
         console.error(error);
@@ -196,15 +206,19 @@ const getSubjects = async (req, res) => {
 const updateSubject = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, code, credits, assignedFaculty } = req.body;
+        const { name, code, credits, faculty, assignedFaculty } = req.body;
+        const effectiveFaculty = faculty || assignedFaculty || '';
         await db.query(
             'UPDATE subjects SET name = $1, code = $2, credits = $3, assigned_faculty = $4 WHERE id = $5',
-            [name, code, credits, assignedFaculty, id]
+            [name, code, parseInt(credits, 10), effectiveFaculty, id]
         );
         res.json({ message: 'Subject updated successfully' });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Server error' });
+        console.error('Error updating subject:', error);
+        if (error.code === '23505') {
+            return res.status(400).json({ message: `Subject code '${req.body.code}' already exists.` });
+        }
+        res.status(500).json({ message: 'Server error while updating subject' });
     }
 };
 
@@ -222,15 +236,26 @@ const deleteSubject = async (req, res) => {
 // Timetable CRUD
 const addSchedule = async (req, res) => {
     try {
-        const { day, timeSlot, subjectName, facultyName, room, batch } = req.body;
+        const { day, time_slot, timeSlot, subject_name, subjectName, faculty_name, facultyName, room, batch } = req.body;
+        const effectiveDay = day;
+        const effectiveTimeSlot = time_slot || timeSlot || '';
+        const effectiveSubject = subject_name || subjectName || '';
+        const effectiveFaculty = faculty_name || facultyName || '';
+        const effectiveRoom = room || '';
+        const effectiveBatch = batch || '';
+
+        if (!effectiveDay || !effectiveTimeSlot || !effectiveSubject) {
+            return res.status(400).json({ message: 'Day, time slot, and subject name are required.' });
+        }
+
         const { rows } = await db.query(
             'INSERT INTO timetable_schedules (day, time_slot, subject_name, faculty_name, room, batch) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-            [day, timeSlot, subjectName, facultyName, room, batch]
+            [effectiveDay, effectiveTimeSlot, effectiveSubject, effectiveFaculty, effectiveRoom, effectiveBatch]
         );
         res.status(201).json({ message: 'Schedule added successfully', schedule: rows[0] });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Server error' });
+        console.error('Error adding schedule:', error);
+        res.status(500).json({ message: 'Server error while adding schedule' });
     }
 };
 
@@ -247,15 +272,28 @@ const getSchedules = async (req, res) => {
 // Notices
 const addNotice = async (req, res) => {
     try {
-        const { title, message, targetRoles } = req.body;
+        const { title, message, target_roles, targetRoles, duration_hours } = req.body;
+        const effectiveRoles = target_roles || targetRoles || 'Everyone';
+
+        if (!title || !message) {
+            return res.status(400).json({ message: 'Title and message are required.' });
+        }
+
+        // Compute expires_at if duration_hours is provided
+        let expiresAt = null;
+        if (duration_hours && parseInt(duration_hours, 10) > 0) {
+            const hours = parseInt(duration_hours, 10);
+            expiresAt = new Date(Date.now() + hours * 60 * 60 * 1000).toISOString();
+        }
+
         const { rows } = await db.query(
-            'INSERT INTO campus_notices (title, message, target_roles) VALUES ($1, $2, $3) RETURNING *',
-            [title, message, targetRoles]
+            'INSERT INTO campus_notices (title, message, target_roles, expires_at) VALUES ($1, $2, $3, $4) RETURNING *',
+            [title.trim(), message.trim(), effectiveRoles, expiresAt]
         );
         res.status(201).json({ message: 'Notice published successfully', notice: rows[0] });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Server error' });
+        console.error('Error adding notice:', error);
+        res.status(500).json({ message: 'Server error while publishing notice' });
     }
 };
 
@@ -265,7 +303,7 @@ const getNotices = async (req, res) => {
         res.json(rows);
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: 'Server error' });
+        res.status(500).json({ message: 'Server error' });
     }
 };
 
@@ -284,7 +322,70 @@ const resetPassword = async (req, res) => {
     }
 };
 
+const deleteNotice = async (req, res) => {
+    try {
+        const { id } = req.params;
+        await db.query('DELETE FROM campus_notices WHERE id = $1', [id]);
+        res.json({ message: 'Notice deleted successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+// Blueprints
+const path = require('path');
+const fs = require('fs');
+
+const uploadBlueprint = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: 'No file uploaded.' });
+        }
+        const { originalname, filename, mimetype, size } = req.file;
+        const { rows } = await db.query(
+            'INSERT INTO campus_blueprints (original_name, stored_name, file_type, file_size, uploaded_by) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+            [originalname, filename, mimetype, size, 'Admin']
+        );
+        res.status(201).json({ message: 'Blueprint uploaded successfully', blueprint: rows[0] });
+    } catch (error) {
+        console.error('Error uploading blueprint:', error);
+        res.status(500).json({ message: 'Server error while uploading blueprint' });
+    }
+};
+
+const getBlueprints = async (req, res) => {
+    try {
+        const { rows } = await db.query('SELECT * FROM campus_blueprints ORDER BY created_at DESC');
+        res.json(rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+const deleteBlueprint = async (req, res) => {
+    try {
+        const { id } = req.params;
+        // Get the stored filename to delete the file
+        const { rows } = await db.query('SELECT stored_name FROM campus_blueprints WHERE id = $1', [id]);
+        if (rows.length > 0) {
+            const filePath = path.join(__dirname, '..', 'uploads', 'blueprints', rows[0].stored_name);
+            if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+            }
+        }
+        await db.query('DELETE FROM campus_blueprints WHERE id = $1', [id]);
+        res.json({ message: 'Blueprint deleted successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
 module.exports = { 
     addUser, getUsers, deleteUser, updateUser, getStats, getIssues, updateIssueStatus, 
-    addSubject, getSubjects, updateSubject, deleteSubject, addSchedule, getSchedules, addNotice, getNotices, resetPassword 
+    addSubject, getSubjects, updateSubject, deleteSubject, addSchedule, getSchedules, 
+    addNotice, getNotices, deleteNotice, resetPassword,
+    uploadBlueprint, getBlueprints, deleteBlueprint
 };

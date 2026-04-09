@@ -58,8 +58,17 @@ const createUserTable = async () => {
                 title VARCHAR(200) NOT NULL,
                 message TEXT NOT NULL,
                 target_roles VARCHAR(100) DEFAULT 'Everyone',
+                expires_at TIMESTAMP,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
+
+            -- Add expires_at column if missing on existing tables
+            DO $$
+            BEGIN
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='campus_notices' AND column_name='expires_at') THEN
+                    ALTER TABLE campus_notices ADD COLUMN expires_at TIMESTAMP;
+                END IF;
+            END $$;
 
             CREATE TABLE IF NOT EXISTS campus_issues (
                 id SERIAL PRIMARY KEY,
@@ -74,10 +83,34 @@ const createUserTable = async () => {
 
             CREATE TABLE IF NOT EXISTS campus_blueprints (
                 id SERIAL PRIMARY KEY,
-                map_url VARCHAR(255) NOT NULL,
-                published_by VARCHAR(100),
+                original_name VARCHAR(255) NOT NULL,
+                stored_name VARCHAR(255) NOT NULL,
+                file_type VARCHAR(50) NOT NULL,
+                file_size BIGINT DEFAULT 0,
+                uploaded_by VARCHAR(100) DEFAULT 'Admin',
+                map_url VARCHAR(255),
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
+
+            -- Migrate existing blueprints table if columns are missing
+            DO $$
+            BEGIN
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='campus_blueprints' AND column_name='original_name') THEN
+                    ALTER TABLE campus_blueprints ADD COLUMN original_name VARCHAR(255) DEFAULT 'unknown';
+                END IF;
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='campus_blueprints' AND column_name='stored_name') THEN
+                    ALTER TABLE campus_blueprints ADD COLUMN stored_name VARCHAR(255) DEFAULT 'unknown';
+                END IF;
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='campus_blueprints' AND column_name='file_type') THEN
+                    ALTER TABLE campus_blueprints ADD COLUMN file_type VARCHAR(50) DEFAULT 'unknown';
+                END IF;
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='campus_blueprints' AND column_name='file_size') THEN
+                    ALTER TABLE campus_blueprints ADD COLUMN file_size BIGINT DEFAULT 0;
+                END IF;
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='campus_blueprints' AND column_name='uploaded_by') THEN
+                    ALTER TABLE campus_blueprints ADD COLUMN uploaded_by VARCHAR(100) DEFAULT 'Admin';
+                END IF;
+            END $$;
         `);
 
         console.log('Database schema ensured (Users, Subjects, Schedules, Notices, Issues, Blueprints).');

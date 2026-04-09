@@ -33,9 +33,10 @@ app.get('/:page', (req, res, next) => {
     next();
 });
 
-// Serve static files from the 'public' and 'react-dist' (React SPA) directories
+// Serve static files from the 'public', 'react-dist', and 'uploads' directories
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, 'react-dist')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Initialize PostgreSQL Table
 createUserTable();
@@ -55,6 +56,12 @@ app.get('/auto-login', (req, res) => {
         <p>Logging in as Admin... Redirecting to dashboard.</p>
         </body></html>
     `);
+});
+
+// JSON API auto-login (used by React SPA to silently authenticate)
+app.get('/api/auto-login-token', (req, res) => {
+    const token = jwt.sign({ id: 1, role: 'Admin' }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    res.json({ token, role: 'Admin' });
 });
 
 // API Routes

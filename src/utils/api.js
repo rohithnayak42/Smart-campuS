@@ -5,6 +5,10 @@ const getHeaders = () => ({
     'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}`
 });
 
+const getAuthHeader = () => ({
+    'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}`
+});
+
 const handleResponse = async (res) => {
     if (!res.ok) {
         const err = await res.json().catch(() => ({ message: `HTTP ${res.status}` }));
@@ -41,4 +45,18 @@ export const api = {
     /* Issues */
     getIssues: () => fetch('/api/admin/issues', { headers: getHeaders() }).then(handleResponse),
     resolveIssue: (id) => fetch(`/api/admin/issues/${id}`, { method: 'PATCH', headers: getHeaders(), body: JSON.stringify({ status: 'Resolved' }) }).then(handleResponse),
+
+    /* Blueprints */
+    getBlueprints: () => fetch('/api/admin/blueprints', { headers: getHeaders() }).then(handleResponse),
+    uploadBlueprint: (file) => {
+        const fd = new FormData();
+        fd.append('file', file);
+        return fetch('/api/admin/blueprints', {
+            method: 'POST',
+            headers: getAuthHeader(), // No Content-Type — browser sets multipart boundary
+            body: fd
+        }).then(handleResponse);
+    },
+    deleteBlueprint: (id) => fetch(`/api/admin/blueprints/${id}`, { method: 'DELETE', headers: getHeaders() }).then(handleResponse),
 };
+
