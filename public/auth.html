@@ -580,6 +580,7 @@
         function handleLoginSuccess(token, role) {
             localStorage.setItem('sc_token', token);
             localStorage.setItem('sc_role', role);
+            localStorage.setItem('role', role);
             window.location.href = routeMap[role] || '/';
         }
 

@@ -19,13 +19,21 @@ const UsersRegistry = () => {
     const showToast = useToast();
     const location = useLocation();
 
-    // Auto-open modal from URL param
+    // Session Check & Auto-open modal
     useEffect(() => {
+        if (!localStorage.getItem('sc_token')) {
+            window.location.href = '/auth.html';
+            return;
+        }
         const p = new URLSearchParams(location.search);
         if (p.get('openModal')) setShowAdd(true);
     }, [location.search]);
 
-    useEffect(() => { loadUsers(); }, []);
+    useEffect(() => { 
+        if (localStorage.getItem('sc_token')) {
+            loadUsers(); 
+        }
+    }, []);
 
     useEffect(() => {
         let r = users;
@@ -45,25 +53,61 @@ const UsersRegistry = () => {
         finally { setLoading(false); }
     };
 
-    const handleCreate = async (e) => {
-        e.preventDefault();
-        if (submitting) return;
-        setSubmitting(true);
-        const fd = new FormData(e.target);
-        const data = Object.fromEntries(fd);
-        if (data.password !== data.confirmPassword) {
-            showToast('⚠️ Passwords do not match');
-            setSubmitting(false);
-            return;
-        }
+    const handleAddUser = async (formData) => {
         try {
-            await api.createUser(data);
+            const data = Object.fromEntries(formData);
+            
+            // Password confirmation check
+            if (data.password !== data.confirmPassword) {
+                showToast('⚠️ Passwords do not match');
+                return;
+            }
+
+            const res = await fetch("/api/users", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${localStorage.getItem('sc_token')}`
+                },
+                body: JSON.stringify({
+                    name: data.name,
+                    campusEmail: data.loginEmail,
+                    personalEmail: data.realEmail,
+                    role: data.role,
+                    password: data.password
+                })
+            });
+
+            const result = await res.json();
+
+            if (!res.ok) throw new Error(result.message || result.error);
+
             showToast('✅ User onboarded successfully');
             setShowAdd(false);
-            e.target.reset();
             loadUsers();
-        } catch (err) { showToast(`⚠️ ${err.message}`); }
-        finally { setSubmitting(false); }
+        } catch (err) {
+            console.error(err);
+            showToast(`⚠️ Failed to create user: ${err.message}`);
+        }
+    };
+
+    const handleCreate = async (e) => {
+        e.preventDefault();
+        
+        // Fix: Robust Admin role check (prevents Access Denied issue)
+        const storedRole = localStorage.getItem("sc_role") || localStorage.getItem("role");
+        if (storedRole?.toLowerCase() !== "admin") {
+            return showToast("⚠️ Access denied. Requires Admin role.");
+        }
+
+        // Fix: Double-click issue
+        if (submitting) return;
+        setSubmitting(true);
+
+        const formData = new FormData(e.target);
+        await handleAddUser(formData);
+
+        setSubmitting(false);
     };
 
     const handleDelete = async (id) => {
@@ -96,10 +140,10 @@ const UsersRegistry = () => {
         finally { setSubmitting(false); }
     };
 
-    const roles = ['All', 'Student', 'Faculty', 'Security Guard', 'Worker', 'Admin'];
+    const roles = ['All', 'Student', 'Faculty', 'Staff', 'Security Guard', 'Worker', 'Admin'];
     const roleBadge = (role) => {
         const cls = {
-            'Student': 'bg-student', 'Faculty': 'bg-faculty',
+            'Student': 'bg-student', 'Faculty': 'bg-faculty', 'Staff': 'bg-faculty',
             'Security Guard': 'bg-security', 'Worker': 'bg-worker', 'Admin': 'bg-admin'
         };
         return cls[role] || 'bg-student';
@@ -190,6 +234,7 @@ const UsersRegistry = () => {
                             <select name="role" className="form-input" required>
                                 <option value="Student">Student</option>
                                 <option value="Faculty">Faculty</option>
+                                <option value="Staff">Staff</option>
                                 <option value="Worker">Worker</option>
                                 <option value="Security Guard">Security Guard</option>
                                 <option value="Admin">Admin</option>
@@ -219,6 +264,7 @@ const UsersRegistry = () => {
                             <select name="role" className="form-input" defaultValue={editUser.role} required>
                                 <option value="Student">Student</option>
                                 <option value="Faculty">Faculty</option>
+                                <option value="Staff">Staff</option>
                                 <option value="Worker">Worker</option>
                                 <option value="Security Guard">Security Guard</option>
                                 <option value="Admin">Admin</option>

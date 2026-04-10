@@ -5,24 +5,61 @@ import { useToast } from '../context/ToastContext';
 import { Users, BookOpen, Calendar, Bell, LifeBuoy, Shield, UserPlus } from 'lucide-react';
 
 const Overview = () => {
-    const [stats, setStats] = useState({ users: 0, subjects: 0, notices: 0, issues: 0 });
+    const [stats, setStats] = useState({
+        totalUsers: 0,
+        totalSubjects: 0,
+        totalSlots: 0,
+        totalNotices: 0,
+        totalIssues: 0
+    });
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
     const showToast = useToast();
 
     useEffect(() => {
-        api.getStats()
-            .then(data => setStats(data))
-            .catch(() => showToast('⚠️ Could not load stats'))
-            .finally(() => setLoading(false));
+        if (!localStorage.getItem('sc_token')) {
+            window.location.href = '/auth.html';
+            return;
+        }
+
+        const fetchStats = async () => {
+            try {
+                const headers = {
+                    'Authorization': `Bearer ${localStorage.getItem('sc_token')}`
+                };
+
+                const [users, subjects, slots, notices, issues] = await Promise.all([
+                    fetch("/api/users", { headers }).then(res => res.json()),
+                    fetch("/api/subjects", { headers }).then(res => res.json()),
+                    fetch("/api/timetable", { headers }).then(res => res.json()),
+                    fetch("/api/notices", { headers }).then(res => res.json()),
+                    fetch("/api/issues", { headers }).then(res => res.json())
+                ]);
+
+                setStats({
+                    totalUsers: users.length || 0,
+                    totalSubjects: subjects.length || 0,
+                    totalSlots: slots.length || 0,
+                    totalNotices: notices.length || 0,
+                    totalIssues: issues.length || 0
+                });
+            } catch (error) {
+                console.error("Error fetching dashboard stats:", error);
+                showToast('⚠️ Could not load real-time stats');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchStats();
     }, []);
 
     const cards = [
-        { label: 'Total Users',       val: stats.users,    Icon: Users,    color: 'color-blue',   path: '/users' },
-        { label: 'Subjects Portfolio', val: stats.subjects, Icon: BookOpen, color: 'color-purple', path: '/subjects' },
-        { label: 'Schedule Slots',    val: 24,             Icon: Calendar, color: 'color-green',  path: '/timetable' },
-        { label: 'Live Notices',      val: stats.notices,  Icon: Bell,     color: 'color-yellow', path: '/notices' },
-        { label: 'Open Issues',       val: stats.issues,   Icon: LifeBuoy, color: 'color-red',    path: '/issues' },
+        { label: 'Total Users', val: stats.totalUsers, Icon: Users, color: 'color-blue', path: '/users' },
+        { label: 'Subjects Portfolio', val: stats.totalSubjects, Icon: BookOpen, color: 'color-purple', path: '/subjects' },
+        { label: 'Schedule Slots', val: stats.totalSlots, Icon: Calendar, color: 'color-green', path: '/timetable' },
+        { label: 'Live Notices', val: stats.totalNotices, Icon: Bell, color: 'color-yellow', path: '/notices' },
+        { label: 'Open Issues', val: stats.totalIssues, Icon: LifeBuoy, color: 'color-red', path: '/issues' },
     ];
 
     return (
@@ -31,7 +68,9 @@ const Overview = () => {
                 {cards.map((c, i) => (
                     <div className="soft-card" key={i} onClick={() => navigate(c.path)}>
                         <div className={`icon-circle ${c.color}`}><c.Icon size={22} /></div>
-                        <div className="card-val">{loading ? '—' : c.val}</div>
+                        <div className="card-val">
+                            <h2>{loading ? '—' : (c.val || 0)}</h2>
+                        </div>
                         <div className="card-label">{c.label}</div>
                     </div>
                 ))}

@@ -3,6 +3,9 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const { createUserTable } = require('./models/User');
+const { adminMiddleware } = require('./middlewares/authMiddleware');
+const { addUser, getUsers, getSubjects, getSchedules, getNotices, getIssues } = require('./controllers/adminController');
+
 
 const app = express();
 
@@ -37,9 +40,35 @@ app.use(express.static(path.join(__dirname, 'react-dist')));
 // Initialize PostgreSQL Table
 createUserTable();
 
+// Auto-login route for Admin (quick access - no OTP needed)
+const jwt = require('jsonwebtoken');
+app.get('/auto-login', (req, res) => {
+    const token = jwt.sign({ id: 1, role: 'Admin' }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    res.send(`
+        <html><body>
+        <script>
+            localStorage.setItem('sc_token', '${token}');
+            localStorage.setItem('sc_role', 'Admin');
+            localStorage.setItem('role', 'Admin');
+            window.location.href = '/admin-dashboard';
+        </script>
+        <p>Logging in as Admin... Redirecting to dashboard.</p>
+        </body></html>
+    `);
+});
+
 // API Routes
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
+
+// Requested dynamic stat routes
+app.get('/api/users', adminMiddleware, getUsers);
+app.post('/api/users', adminMiddleware, addUser);
+app.get('/api/subjects', adminMiddleware, getSubjects);
+app.get('/api/timetable', adminMiddleware, getSchedules);
+app.get('/api/notices', adminMiddleware, getNotices);
+app.get('/api/issues', adminMiddleware, getIssues);
+
 
 // Root route - Serve the landing page
 app.get('/', (req, res) => {

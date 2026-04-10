@@ -1,24 +1,41 @@
 const nodemailer = require('nodemailer');
 
+// Persistent pooled SMTP connection for fast email delivery
 const transporter = nodemailer.createTransport({
+    pool: true,          // Keep connection open & reuse it
+    maxConnections: 5,   // Allow multiple parallel sends
+    maxMessages: 100,    // Messages per connection
     service: 'gmail',
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
+    },
+    tls: {
+        rejectUnauthorized: false  // Faster TLS handshake
     }
 });
 
-const sendEmail = async (to, subject, text) => {
+// Verify transporter on startup for fast first-send
+transporter.verify((error) => {
+    if (error) {
+        console.error('❌ Mailer connection error:', error.message);
+    } else {
+        console.log('✅ Mailer ready - SMTP connection pooled');
+    }
+});
+
+const sendEmail = async (to, subject, text, html = null) => {
     try {
-        await transporter.sendMail({
-            from: `"Smart Campus" <${process.env.EMAIL_USER}>`,
+        const info = await transporter.sendMail({
+            from: `"Smart Campus System" <${process.env.EMAIL_USER}>`,
             to,
             subject,
-            text
+            text,
+            html
         });
-        console.log(`Email sent to ${to}`);
+        console.log(`✅ Email delivered to ${to} [${info.messageId}]`);
     } catch (error) {
-        console.error('Error sending email:', error);
+        console.error(`❌ Email failed to ${to}:`, error.message);
     }
 };
 

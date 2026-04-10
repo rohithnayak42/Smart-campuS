@@ -4,10 +4,18 @@ const { sendEmail } = require('../utils/mailer');
 
 const addUser = async (req, res) => {
     try {
-        const { name, loginEmail, realEmail, password, role } = req.body;
+        const { name, campusEmail, loginEmail, personalEmail, realEmail, password, role } = req.body;
         
+        // Aligning with frontend field names
+        const effectiveLoginEmail = campusEmail || loginEmail;
+        const effectiveRealEmail = personalEmail || realEmail;
+
+        if (!effectiveLoginEmail || !effectiveRealEmail) {
+            return res.status(400).json({ message: 'Missing required email fields' });
+        }
+
         // Check if login email already exists
-        const { rows: existingUser } = await db.query('SELECT id FROM users WHERE email = $1', [loginEmail]);
+        const { rows: existingUser } = await db.query('SELECT id FROM users WHERE email = $1', [effectiveLoginEmail]);
         if (existingUser.length > 0) {
             return res.status(400).json({ message: 'Login Email already in use' });
         }
@@ -17,31 +25,30 @@ const addUser = async (req, res) => {
 
         const { rows: newUser } = await db.query(
             'INSERT INTO users (name, email, real_email, password, temp_password, role, is_first_login) VALUES ($1, $2, $3, $4, $5, $6, true) RETURNING *',
-            [name, loginEmail, realEmail, hashedPassword, password, role]
+            [name, effectiveLoginEmail, effectiveRealEmail, hashedPassword, password, role]
         );
 
         const user = newUser[0];
 
-        // Professional Email Format
-        const emailSubject = 'Welcome to Smart Campus - Your Credentials';
-        const emailBody = `Hello ${name},
+        // Professional HTML Email Format
+        const emailSubject = 'Your Smart Campus Login Credentials';
+        const emailBody = `Hello ${name}, Welcome to Smart Campus. You have been added as ${role}. Your login details are: Email: ${effectiveLoginEmail}, Password: ${password}.`;
+        const emailHtml = `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; padding: 20px; border: 1px solid #e5e7eb; border-radius: 12px;">
+                <h3 style="color: #1F2937;">Welcome to Smart Campus</h3>
+                <p style="color: #4B5563;">Hello <strong>${name}</strong>,</p>
+                <p style="color: #4B5563;">You have been successfully onboarded as <strong>${role}</strong>.</p>
+                <div style="background: #f9fafb; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                    <p style="margin: 0; color: #374151;"><strong>Login Email:</strong> ${effectiveLoginEmail}</p>
+                    <p style="margin: 5px 0 0; color: #374151;"><strong>Default Password:</strong> ${password}</p>
+                </div>
+                <p style="color: #6B7280; font-size: 14px;">Please login and change your password immediately for security.</p>
+                <hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 20px 0;" />
+                <p style="font-size: 12px; color: #9CA3AF;">Regards,<br>Smart Campus Administration Hub</p>
+            </div>
+        `;
 
-Welcome to Smart Campus.
-
-You have been added as ${role}.
-
-Login Details:
-Login Email: ${loginEmail}
-Password: ${password}
-
-Please login and change your password immediately.
-
-Regards,  
-Smart Campus`;
-
-        // Send email to realEmail
-        await sendEmail(realEmail, emailSubject, emailBody);
-
+        // Send response IMMEDIATELY (don't wait for email)
         res.status(201).json({ 
             message: 'User created and credentials sent to personal email', 
             user: { 
@@ -52,6 +59,11 @@ Smart Campus`;
                 role: user.role 
             } 
         });
+
+        // Send HTML email to real_email (personal address) IN BACKGROUND
+        sendEmail(effectiveRealEmail, emailSubject, emailBody, emailHtml)
+            .then(() => console.log(`✅ Credentials email sent to ${effectiveRealEmail}`))
+            .catch(err => console.error(`❌ Failed to send email to ${effectiveRealEmail}:`, err.message));
     } catch (error) {
         console.error('Error adding user:', error);
         res.status(500).json({ error: 'Server error during user creation' });
