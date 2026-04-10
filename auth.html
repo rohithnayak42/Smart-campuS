@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Campus - Authenticate</title>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="/css/dashboards.css">
+    <link rel="stylesheet" href="/css/role-selection.css">
+    <style>
+        body {
+            height: 100vh;
+            background: linear-gradient(135deg, #e6eef5, #f8fafc) !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        .dashboard-container {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        /* Glass Login Card */
+        .login-card {
+            width: 100%;
+            max-width: 420px;
+            padding: 40px 35px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+            text-align: center;
+            transition: 0.3s ease;
+            animation: fadeIn 0.6s ease; /* Floating removed as requested */
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .login-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .login-icon {
+            width: 65px;
+            height: 65px;
+            margin: 0 auto 18px;
+            border-radius: 14px;
+            background: #f3f4f6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #C5A880;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .login-card h2 {
+            font-size: 24px;
+            color: #1F2937;
+            margin-top: 10px;
+            margin-bottom: 6px;
+            font-weight: 700;
+        }
+
+        .login-card p {
+            font-size: 15px;
+            color: #6B7280;
+            margin-bottom: 20px;
+        }
+
+        /* Form Controls */
+        #login-form {
+            width: 100%;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 18px;
+            text-align: left;
+            width: 100%;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #4B5563;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 13px 14px;
+            border-radius: 10px;
+            border: 1px solid #e5e7eb;
+            outline: none;
+            transition: 0.3s;
+            background: rgba(255, 255, 255, 0.8);
+            font-size: 15px;
+        }
+
+        .input-group input:focus {
+            border-color: #C5A880;
+            box-shadow: 0 0 0 4px rgba(197, 168, 128, 0.15);
+            background: #fff;
+        }
+
+        .password-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px; /* Spacing before forgot link */
+        }
+
+        .forgot-link {
+            display: block;
+            text-align: right;
+            font-size: 13px;
+            margin-top: 8px;
+            margin-bottom: 10px; /* Spacing before button */
+            color: #6B7280;
+            text-decoration: none;
+            transition: 0.3s;
+            font-weight: 500;
+            width: 100%;
+        }
+
+        .forgot-link:hover {
+            color: #C5A880;
+        }
+
+        .login-btn {
+            width: 100%;
+            margin-top: 10px;
+            padding: 14px;
+            border-radius: 12px;
+            border: none;
+            background: linear-gradient(135deg, #1F2937, #374151);
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+            box-shadow: 0 4px 12px rgba(31, 41, 55, 0.2);
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            background: linear-gradient(135deg, #374151, #4b5563);
+            box-shadow: 0 6px 15px rgba(31, 41, 55, 0.3);
+        }
+
+        .google-btn {
+            margin-top: 16px;
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            background: white;
+            color: #4B5563;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s;
+        }
+
+        .google-btn:hover {
+            background: #f9fafb;
+            border-color: #d1d5db;
+        }
+
+        .google-btn img {
+            width: 18px;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: flex-start;
+            margin-bottom: 15px;
+            width: 100%;
+        }
+
+        .back-btn {
+            font-size: 14px;
+            color: #6B7280;
+            text-decoration: none;
+            font-weight: 500;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .back-btn:hover {
+            color: #1F2937;
+            transform: translateX(-3px);
+        }
+
+        .back-link {
+            display: none !important; /* Remove old back link */
+        }
+
+        .password-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 14px;
+            cursor: pointer;
+            color: #6B7280;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: none;
+            border: none;
+            padding: 5px;
+            z-index: 5;
+        }
+
+        .toggle-password:hover {
+            color: #1F2937;
+        }
+
+        .toggle-password i {
+            width: 18px;
+            height: 18px;
+        }
+
+        .otp-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin: 15px 0 25px;
+            width: 100%;
+        }
+
+        .otp-box {
+            width: 100%;
+            height: 55px;
+            text-align: center;
+            font-size: 20px;
+            font-weight: 600;
+            border-radius: 10px;
+            border: 1px solid #e5e7eb;
+            outline: none;
+            transition: 0.2s;
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .otp-box:focus {
+            border-color: #C5A880;
+            box-shadow: 0 0 0 3px rgba(197, 168, 128, 0.2);
+            background: #fff;
+        }
+
+        .resend-container {
+            text-align: center;
+            font-size: 14px;
+            color: #6B7280;
+            margin-bottom: 20px;
+        }
+
+        .resend-btn {
+            background: none;
+            border: none;
+            color: #C5A880;
+            font-weight: 600;
+            cursor: pointer;
+            margin-left: 5px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            transition: 0.2s;
+        }
+
+        .resend-btn:hover:not(:disabled) {
+            background: rgba(197, 168, 128, 0.1);
+            text-decoration: underline;
+        }
+
+        .resend-btn:disabled {
+            color: #9CA3AF;
+            cursor: not-allowed;
+            text-decoration: none;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .spinner { animation: spin 1s linear infinite; width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px; }
+
+        .hidden { display: none !important; }
+        
+        .error-message {
+            color: #ef4444; background: #fee2e2; padding: 10px; border-radius: 8px; 
+            margin-bottom: 15px; font-size: 13px; text-align: center; border: 1px solid #fca5a5;
+            display: none;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Premium Role Selection View -->
+        <div class="role-container" id="role-selection-view">
+            <header class="header-section">
+                <h1 class="page-title">Welcome to Smart Campus Portal</h1>
+                <div class="title-line"></div>
+                <p class="page-subtitle">Choose your role to securely continue to your dashboard</p>
+            </header>
+
+            <div class="role-grid">
+                <div class="role-card" onclick="selectRole('admin')">
+                    <div class="icon-wrapper"><i data-lucide="shield" size="50"></i></div>
+                    <h3>Administrator</h3>
+                </div>
+                <div class="role-card" onclick="selectRole('staff')">
+                    <div class="icon-wrapper"><i data-lucide="book-open" size="50"></i></div>
+                    <h3>Staff (Faculty)</h3>
+                </div>
+                <div class="role-card" onclick="selectRole('student')">
+                    <div class="icon-wrapper"><i data-lucide="graduation-cap" size="50"></i></div>
+                    <h3>Student</h3>
+                </div>
+                <div class="role-card" onclick="selectRole('worker')">
+                    <div class="icon-wrapper"><i data-lucide="hard-hat" size="50"></i></div>
+                    <h3>Worker</h3>
+                </div>
+                <div class="role-card" onclick="selectRole('guard')">
+                    <div class="icon-wrapper"><i data-lucide="user-check" size="50"></i></div>
+                    <h3>Security Guard</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- Glassmorphism Login Card -->
+        <div class="login-card hidden" id="login-form-view">
+            <div class="top-bar">
+                <a href="#" onclick="goBack()" class="back-btn">← Back</a>
+            </div>
+            <div class="login-icon" id="role-icon-container">
+                <i data-lucide="shield" id="active-role-icon"></i>
+            </div>
+            <h2>Sign in to Smart Campus</h2>
+            <p id="role-subtitle">Secure access to your dashboard</p>
+            
+            <form id="login-form">
+                <input type="hidden" id="selected-role">
+                <div id="login-error" class="error-message"></div>
+                
+                <div class="input-group">
+                    <label>Email Address</label>
+                    <input type="email" id="email" placeholder="Enter your email" required>
+                </div>
+                <div class="input-group">
+                    <label>Password</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="password" placeholder="••••••••" required>
+                        <span class="toggle-password" onclick="togglePassword()">
+                            <i data-lucide="eye" id="eye-icon"></i>
+                        </span>
+                    </div>
+                    <a href="#" onclick="showForgotPassword()" class="forgot-link">Forgot password?</a>
+                </div>
+                <button type="submit" class="login-btn" id="login-btn-submit">
+                    <span style="display:flex; align-items:center; justify-content:center;"><span class="btn-text">Sign In</span></span>
+                </button>
+                
+                <!-- Role-based Google Login -->
+                <div id="admin-extras" class="hidden">
+                    <button type="button" class="google-btn">
+                        <img src="https://www.vectorlogo.zone/logos/google/google-icon.svg" alt="Google">
+                        Continue with Google
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Forgot Password View -->
+        <div class="login-card hidden" id="forgot-password-view">
+            <div class="top-bar">
+                <a href="#" onclick="goBackToLogin()" class="back-btn">← Back</a>
+            </div>
+            <div class="login-icon"><i data-lucide="key"></i></div>
+            <h2>Reset Your Password</h2>
+            <p>Enter your email to receive a reset link</p>
+            <form id="forgot-form">
+                <div class="input-group">
+                    <label>Email Address</label>
+                    <input type="email" id="forgot-email" placeholder="name@campus.edu" required>
+                </div>
+                <button type="submit" class="login-btn">Send Reset Link</button>
+            </form>
+        </div>
+
+        <!-- OTP & Password Views (Also using Glass Design) -->
+        <div class="login-card hidden" id="otp-view">
+            <div class="top-bar">
+                <a href="#" onclick="goBackToLogin()" class="back-btn">← Back</a>
+            </div>
+            <div class="login-icon"><i data-lucide="mail"></i></div>
+            <h2>Verify Identity</h2>
+            <p>Enter the 6-digit OTP sent to your email.</p>
+            <form id="otp-form">
+                <div id="otp-error" class="error-message"></div>
+                <div class="otp-container">
+                    <input type="text" maxlength="1" class="otp-box" required />
+                    <input type="text" maxlength="1" class="otp-box" required />
+                    <input type="text" maxlength="1" class="otp-box" required />
+                    <input type="text" maxlength="1" class="otp-box" required />
+                    <input type="text" maxlength="1" class="otp-box" required />
+                    <input type="text" maxlength="1" class="otp-box" required />
+                </div>
+                
+                <div class="resend-container">
+                    <span>Didn't receive OTP?</span>
+                    <button type="button" class="resend-btn" onclick="resendOTP()">Resend</button>
+                </div>
+
+                <button type="submit" class="login-btn" id="otp-btn-submit">
+                    <span style="display:flex; align-items:center; justify-content:center;"><span class="btn-text">Verify Account</span></span>
+                </button>
+            </form>
+        </div>
+
+        <div class="login-card hidden" id="change-pass-view">
+            <div class="login-icon"><i data-lucide="lock"></i></div>
+            <h2>Set New Password</h2>
+            <p>Required for your first secure login.</p>
+            <form id="change-pass-form">
+                <div id="pwd-error" class="error-message"></div>
+                <input type="hidden" id="change-pass-userid">
+                <div class="input-group">
+                    <label>New Password</label>
+                    <input type="password" id="new-pwd" placeholder="Minimum 6 characters" required>
+                </div>
+                <button type="submit" class="login-btn" id="pwd-btn-submit">
+                    <span style="display:flex; align-items:center; justify-content:center;"><span class="btn-text">Update & Login</span></span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const views = {
+            role: document.getElementById('role-selection-view'),
+            login: document.getElementById('login-form-view'),
+            otp: document.getElementById('otp-view'),
+            changePass: document.getElementById('change-pass-view'),
+            forgot: document.getElementById('forgot-password-view')
+        };
+
+        const roleIcons = {
+            'admin': 'shield',
+            'staff': 'book-open',
+            'student': 'graduation-cap',
+            'worker': 'hard-hat',
+            'guard': 'user-check'
+        };
+
+        function showView(viewId) {
+            Object.values(views).forEach(v => v.classList.add('hidden'));
+            views[viewId].classList.remove('hidden');
+
+            // Auto-focus first input for specific views
+            if (viewId === 'otp') {
+                const firstOtpBox = document.querySelector('.otp-box');
+                if (firstOtpBox) {
+                    setTimeout(() => firstOtpBox.focus(), 100);
+                }
+            } else if (viewId === 'login') {
+                const emailInput = document.getElementById('email');
+                if (emailInput) {
+                    setTimeout(() => emailInput.focus(), 100);
+                }
+            }
+        }
+
+        function selectRole(role) {
+            document.getElementById('selected-role').value = role;
+            
+            const adminExtras = document.getElementById('admin-extras');
+            if (role === 'Admin') adminExtras.classList.remove('hidden');
+            else adminExtras.classList.add('hidden');
+
+            const iconName = roleIcons[role] || 'user';
+            const iconContainer = document.getElementById('role-icon-container');
+            iconContainer.innerHTML = `<i data-lucide="${iconName}" size="34"></i>`;
+            
+            if (window.lucide) lucide.createIcons();
+            showView('login');
+        }
+
+        function goBack() { showView('role'); }
+        function goBackToLogin() { showView('login'); }
+        function showForgotPassword() { showView('forgot'); }
+
+        function resendOTP() {
+            // Logic to trigger backend resend would go here
+            console.log("Resending OTP...");
+            startResendTimer();
+        }
+
+        function startResendTimer() {
+            let time = 30;
+            const btn = document.querySelector(".resend-btn");
+            btn.disabled = true;
+
+            const interval = setInterval(() => {
+                if (time > 0) {
+                    btn.textContent = `Resend in ${time}s`;
+                    time--;
+                } else {
+                    btn.textContent = "Resend";
+                    btn.disabled = false;
+                    clearInterval(interval);
+                }
+            }, 1000);
+        }
+
+        // OTP Auto-focus logic
+        const otpInputs = document.querySelectorAll(".otp-box");
+        otpInputs.forEach((input, index) => {
+            input.addEventListener("input", (e) => {
+                if (e.target.value && index < otpInputs.length - 1) {
+                    otpInputs[index + 1].focus();
+                }
+            });
+
+            input.addEventListener("keydown", (e) => {
+                if (e.key === "Backspace" && !e.target.value && index > 0) {
+                    otpInputs[index - 1].focus();
+                }
+            });
+        });
+
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const icon = document.getElementById('eye-icon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.setAttribute('data-lucide', 'eye-off');
+            } else {
+                passwordInput.type = 'password';
+                icon.setAttribute('data-lucide', 'eye');
+            }
+            if (window.lucide) lucide.createIcons();
+        }
+
+        const routeMap = {
+            'admin': '/admin-dashboard',
+            'student': '/student-dashboard',
+            'staff': '/staff-dashboard',
+            'worker': '/worker-dashboard',
+            'guard': '/guard-dashboard'
+        };
+
+        function handleLoginSuccess(token, role) {
+            localStorage.setItem('sc_token', token);
+            localStorage.setItem('sc_role', role);
+            localStorage.setItem('role', role);
+            window.location.href = routeMap[role] || '/';
+        }
+
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const role = document.getElementById('selected-role').value;
+            const btn = document.getElementById('login-btn-submit');
+            const errBox = document.getElementById('login-error');
+            const btnText = btn.querySelector('.btn-text');
+
+            errBox.style.display = 'none';
+            btn.disabled = true;
+            btn.style.opacity = '0.7';
+            btn.style.cursor = 'not-allowed';
+            btnText.innerHTML = `<i data-lucide="loader-2" class="spinner"></i> Signing in...`;
+            if (window.lucide) lucide.createIcons();
+
+            try {
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password, role })
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    errBox.textContent = data.message || "Invalid credentials. Please try again.";
+                    errBox.style.display = 'block';
+                } else {
+                    if (data.step === 'OTP') showView('otp');
+                    else if (data.step === 'CHANGE_PASSWORD') {
+                        document.getElementById('change-pass-userid').value = data.userId;
+                        showView('changePass');
+                    } else handleLoginSuccess(data.token, data.role.toLowerCase());
+                }
+            } catch (err) { 
+                errBox.textContent = 'Network error parsing authentication token.';
+                errBox.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                btn.style.cursor = 'pointer';
+                btnText.textContent = 'Sign In';
+            }
+        });
+
+        document.getElementById('otp-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const role = document.getElementById('selected-role').value;
+            const btn = document.getElementById('otp-btn-submit');
+            const errBox = document.getElementById('otp-error');
+            const btnText = btn.querySelector('.btn-text');
+            
+            const otp = Array.from(otpInputs).map(input => input.value).join('');
+
+            errBox.style.display = 'none';
+            btn.disabled = true;
+            btn.style.opacity = '0.7';
+            btn.style.cursor = 'not-allowed';
+            btnText.innerHTML = `<i data-lucide="loader-2" class="spinner"></i> Verifying...`;
+            if (window.lucide) lucide.createIcons();
+
+            try {
+                const res = await fetch('/api/auth/verify-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, otp, role })
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    errBox.textContent = data.message || "Invalid OTP entered.";
+                    errBox.style.display = 'block';
+                }
+                else handleLoginSuccess(data.token, data.role);
+            } catch (err) { 
+                errBox.textContent = 'Failed to verify OTP over network connection.';
+                errBox.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                btn.style.cursor = 'pointer';
+                btnText.textContent = 'Verify Account';
+            }
+        });
+
+        document.getElementById('change-pass-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const userId = document.getElementById('change-pass-userid').value;
+            const newPassword = document.getElementById('new-pwd').value;
+            const btn = document.getElementById('pwd-btn-submit');
+            const errBox = document.getElementById('pwd-error');
+            const btnText = btn.querySelector('.btn-text');
+
+            errBox.style.display = 'none';
+            btn.disabled = true;
+            btn.style.opacity = '0.7';
+            btn.style.cursor = 'not-allowed';
+            btnText.innerHTML = `<i data-lucide="loader-2" class="spinner"></i> Updating...`;
+            if (window.lucide) lucide.createIcons();
+
+            try {
+                const res = await fetch('/api/auth/change-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId, newPassword })
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    errBox.textContent = data.message || "Could not update the password.";
+                    errBox.style.display = 'block';
+                }
+                else handleLoginSuccess(data.token, data.role);
+            } catch (err) { 
+                errBox.textContent = 'Network error preventing password registry reset.';
+                errBox.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                btn.style.cursor = 'pointer';
+                btnText.textContent = 'Update & Login';
+            }
+        });
+
+        window.addEventListener('DOMContentLoaded', () => {
+            if (window.lucide) lucide.createIcons();
+            const urlParams = new URLSearchParams(window.location.search);
+            const role = urlParams.get('role');
+            if (role) setTimeout(() => selectRole(role), 100);
+        });
+    </script>
+</body>
+</html>

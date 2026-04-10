@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Campus | Student Portal</title>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        :root {
+            --bg-color: linear-gradient(to bottom right, #F8FAFC, #EEF2F7);
+            --sidebar-grad: linear-gradient(to bottom, #1E293B, #0F172A);
+            --card-glass: #FFFFFF;
+            --primary-text: #0F172A;
+            --secondary-text: #64748B;
+            --accent: #C5A880; /* Gold */
+            --accent-soft: rgba(197, 168, 128, 0.15);
+            --success: #DCFCE7;
+            --success-text: #166534;
+            --info: #E0F2FE;
+            --info-text: #075985;
+            --warning: #FEF3C7;
+            --warning-text: #92400E;
+            --danger: #FEE2E2;
+            --danger-text: #991B1B;
+            --border: rgba(0,0,0,0.04);
+            --radius-lg: 18px;
+            --shadow-md: 0 8px 25px rgba(0,0,0,0.06);
+            --shadow-hover: 0 15px 35px rgba(0,0,0,0.08);
+            --transition: all 0.3s ease;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+
+        body { 
+            background: var(--bg-color);
+            color: var(--primary-text); 
+            display: flex; 
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar Refinement */
+        .sidebar {
+            width: 280px;
+            background: var(--sidebar-grad);
+            color: white;
+            height: 100vh;
+            position: fixed;
+            left: 0; top: 0;
+            display: flex;
+            flex-direction: column;
+            padding: 35px 22px;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--accent);
+            letter-spacing: -1px;
+            margin-bottom: 50px;
+            padding-left: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-list { list-style: none; flex: 1; }
+        .nav-item { margin-bottom: 8px; }
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 18px;
+            color: #94A3B8;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 500;
+            font-size: 14px;
+            transition: var(--transition);
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+        }
+
+        .nav-link.active {
+            background: var(--accent-soft);
+            color: white;
+            border-left: 3px solid var(--accent);
+            border-radius: 0 12px 12px 0;
+            padding-left: 15px; 
+        }
+
+        /* Header Refinement */
+        header {
+            position: fixed;
+            top: 0; right: 0;
+            width: calc(100% - 280px);
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 15px 40px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            z-index: 900;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .admin-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 6px 16px;
+            background: white;
+            border-radius: 100px;
+            border: 1px solid rgba(0,0,0,0.05);
+            cursor: pointer;
+        }
+
+        .initial-circle {
+            width: 30px; height: 30px;
+            background: #1E293B;
+            color: var(--accent);
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 50%;
+            font-weight: 800; font-size: 13px;
+        }
+
+        /* Main Content */
+        main {
+            margin-left: 280px;
+            padding: 100px 40px 50px;
+            width: calc(100% - 280px);
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.4s ease; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .soft-card {
+            background: var(--card-glass);
+            padding: 28px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border);
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--primary-text);
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            background: white;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        table { width: 100%; border-collapse: collapse; }
+        th {
+            background: #F8FAFC;
+            padding: 15px 20px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--secondary-text);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border);
+        }
+        td {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+            color: var(--primary-text);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), #E6D3A3);
+            color: #1E293B;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(197, 168, 128, 0.4); }
+
+        .btn-secondary {
+            background: white;
+            color: var(--primary-text);
+            border: 1px solid #E2E8F0;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--secondary-text); margin-bottom: 8px; }
+        .form-control { width: 100%; padding: 12px 15px; border-radius: 8px; border: 1px solid #E2E8F0; font-size: 14px; }
+
+        .badge-present { background: var(--success); color: var(--success-text); padding: 4px 10px; border-radius: 100px; font-size: 11px; font-weight: 700; }
+        .badge-absent { background: var(--danger); color: var(--danger-text); padding: 4px 10px; border-radius: 100px; font-size: 11px; font-weight: 700; }
+
+        .toast-box {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #1E293B;
+            color: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            font-weight: 500;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            z-index: 9999;
+        }
+        .toast-box.active { transform: translateY(0); opacity: 1; }
+
+        /* Document/Material Cards */
+        .material-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        .material-card {
+            background: white; border: 1px solid var(--border);
+            padding: 20px; border-radius: 15px;
+            display: flex; align-items: start; gap: 15px;
+            transition: var(--transition);
+        }
+        .material-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+    </style>
+</head>
+<body>
+
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <i data-lucide="graduation-cap" style="width: 32px; height: 32px;"></i>
+            <span>Student Portal</span>
+        </div>
+        <ul class="nav-list">
+            <li class="nav-item">
+                <a href="#" class="nav-link active" id="nav-timetable" onclick="switchTab('timetable'); return false;">
+                    <i data-lucide="calendar"></i><span>My Timetable</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link" id="nav-attendance" onclick="switchTab('attendance'); return false;">
+                    <i data-lucide="check-circle"></i><span>Attendance & Marks</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link" id="nav-materials" onclick="switchTab('materials'); return false;">
+                    <i data-lucide="book-open"></i><span>Study Materials</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link" id="nav-doubts" onclick="switchTab('doubts'); return false;">
+                    <i data-lucide="message-square"></i><span>Ask Doubts</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link" id="nav-complaints" onclick="switchTab('complaints'); return false;">
+                    <i data-lucide="alert-circle"></i><span>Complaints</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link" id="nav-map" onclick="switchTab('map'); return false;">
+                    <i data-lucide="map"></i><span>Campus Map</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <header>
+        <div class="admin-profile">
+            <div class="initial-circle" id="profile-letter">S</div>
+            <div style="text-align: left;">
+                <div style="font-weight: 700; font-size: 13px; color: var(--primary-text);" id="profile-name">Student Account</div>
+                <div style="font-size: 11px; color: var(--secondary-text);" id="profile-batch">Enrolled Batch</div>
+            </div>
+        </div>
+        <button class="btn-secondary" style="margin-left: 15px; padding: 8px 20px; font-size: 12px; border:none; background:#FEE2E2; color:#991B1B;" onclick="logout()">Logout</button>
+    </header>
+
+    <main>
+        <!-- My Timetable -->
+        <div id="timetable" class="tab-content active">
+            <h2 class="section-title">Enrolled Academic Schedule</h2>
+            <div class="soft-card">
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Time / Day</th>
+                                <th>Subject</th>
+                                <th>Faculty</th>
+                                <th>Room Location</th>
+                            </tr>
+                        </thead>
+                        <tbody id="timetable-rows">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <h2 class="section-title" style="margin-top:40px;">Campus Notices</h2>
+            <div id="notices-container" style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+
+        <!-- Attendance & Marks -->
+        <div id="attendance" class="tab-content">
+            <h2 class="section-title">Attendance History</h2>
+            <div class="soft-card">
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Subject</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="attendance-rows">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="soft-card" style="margin-top: 20px;">
+                <h3 style="font-size: 15px; font-weight:700; color:var(--secondary-text);">Academic Marks</h3>
+                <p style="margin-top:10px; font-size:14px; color:var(--primary-text);">Currently, academic testing is administered via distributed physical evaluations. Check your individual test assignments for grade releases.</p>
+            </div>
+        </div>
+
+        <!-- Study Materials -->
+        <div id="materials" class="tab-content">
+            <h2 class="section-title">Course Material Repository</h2>
+            <div class="material-grid" id="materials-container">
+                <!-- Dynamically populated -->
+            </div>
+        </div>
+
+        <!-- Doubts / Q&A -->
+        <div id="doubts" class="tab-content">
+            <h2 class="section-title">Academic Queries & Clarifications</h2>
+            
+            <div class="soft-card" style="margin-bottom: 30px;">
+                <h3 style="font-size: 15px; font-weight:600; margin-bottom:15px;">Ask a New Doubt</h3>
+                <form id="doubt-form">
+                    <div style="display:grid; grid-template-columns: 1fr; gap:15px;">
+                        <input type="text" class="form-control" id="doubt-subject" required placeholder="Subject / Course (e.g., Mathematics 101)">
+                        <textarea class="form-control" id="doubt-msg" rows="3" required placeholder="Describe what you need clarification on..."></textarea>
+                        <button type="submit" class="btn-primary" style="width: max-content;">Send to Faculty</button>
+                    </div>
+                </form>
+            </div>
+
+            <div id="doubts-list-container">
+                <!-- Dynamically populated -->
+            </div>
+        </div>
+
+        <!-- Complaints -->
+        <div id="complaints" class="tab-content">
+            <h2 class="section-title">File an Official Campus Complaint</h2>
+            <div class="soft-card">
+                <form id="query-form">
+                    <div class="form-group">
+                        <label>Issue Subject / Category</label>
+                        <input type="text" class="form-control" id="query-title" required placeholder="e.g. WiFi outage in Library">
+                    </div>
+                    <div class="form-group">
+                        <label>Detailed Description</label>
+                        <textarea class="form-control" id="query-desc" rows="4" required placeholder="Describe the problem, location, etc."></textarea>
+                    </div>
+                    <!-- Using direct text for now as unified backend uses JSON -->
+                    <button type="submit" class="btn-primary">Submit to Resolution Hub</button>
+                </form>
+            </div>
+            
+            <h2 class="section-title" style="margin-top:30px;">Your Filed Complaints</h2>
+            <div id="complaints-list" style="display:flex; flex-direction:column; gap:15px;">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+
+        <!-- Campus Map -->
+        <div id="map" class="tab-content">
+            <h2 class="section-title">Campus Blueprints & Maps</h2>
+            <div class="material-grid" id="map-container">
+                <!-- Dynamically populated -->
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Logout Modal -->
+    <div id="logout-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; z-index:9999; backdrop-filter: blur(5px);">
+        <div style="background:white; padding:35px; border-radius:24px; width:380px; text-align:center; box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
+            <div style="width:60px; height:60px; background:#FEE2E2; border-radius:50%; display:flex; align-items:center; justify-content:center; margin: 0 auto 20px;">
+                <i data-lucide="log-out" style="color:#991B1B; width:28px; height:28px;"></i>
+            </div>
+            <h3 style="font-weight:700; font-size:20px; color:#0F172A;">Ready to Logout?</h3>
+            <p style="margin:15px 0 25px; color:#64748B; font-size:14px; line-height:1.6;">Are you sure you want to securely end your current portal session?</p>
+            <div style="display:flex; gap:15px; justify-content:center;">
+                <button onclick="closeLogout()" class="btn-secondary" style="flex:1;">Cancel</button>
+                <button onclick="confirmLogout()" class="btn-primary" style="flex:1; background:#EF4444; color:white;">Yes, Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="t-bin" class="toast-box">System confirmed status.</div>
+
+    <script>
+        const tok = localStorage.getItem('sc_token');
+        const storedRole = (localStorage.getItem('sc_role') || '').toLowerCase();
+        if(!tok || storedRole !== 'student') window.location.href = '/auth';
+
+        function tBox(msg) {
+            const t = document.getElementById('t-bin');
+            t.textContent = msg;
+            t.classList.add('active');
+            setTimeout(() => t.classList.remove('active'), 3000);
+        }
+
+        // SPA Router
+        function switchTab(id) {
+            document.querySelectorAll('.tab-content').forEach(function(t) {
+                t.style.display = 'none';
+                t.classList.remove('active');
+            });
+            var target = document.getElementById(id);
+            if (!target) target = document.getElementById('timetable');
+            target.style.display = 'block';
+            target.classList.add('active');
+
+            document.querySelectorAll('.nav-link').forEach(function(l) { l.classList.remove('active'); });
+            var navLink = document.getElementById('nav-' + id);
+            if (navLink) navLink.classList.add('active');
+
+            // Refresh data logic
+            if (id === 'timetable') { loadTimetable(); loadNotices(); }
+            if (id === 'attendance') loadAttendance();
+            if (id === 'materials') loadMaterials();
+            if (id === 'doubts') loadDoubts();
+            if (id === 'complaints') loadIssues();
+            if (id === 'map') loadBlueprints();
+        }
+
+        // Data Loaders
+        async function loadProfile() {
+            try {
+                const res = await fetch('/api/stakeholder/profile', { headers: { 'Authorization': `Bearer ${tok}` } });
+                const { name, batch } = await res.json();
+                document.getElementById('profile-letter').textContent = (name || 'S').charAt(0).toUpperCase();
+                document.getElementById('profile-name').textContent = name || 'Student Account';
+                document.getElementById('profile-batch').textContent = batch ? `Batch: ${batch}` : 'General Status';
+            } catch(e) {}
+        }
+
+        async function loadTimetable() {
+            try {
+                const res = await fetch('/api/stakeholder/student/timetable', { headers: { 'Authorization': `Bearer ${tok}` } });
+                const data = await res.json();
+                const body = document.getElementById('timetable-rows');
+                
+                if(data.length === 0) {
+                     body.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--secondary-text);">No classes assigned to your batch yet.</td></tr>`;
+                     return;
+                }
+
+                body.innerHTML = data.map(x => `
+                    <tr>
+                        <td style="font-weight:600; color:var(--accent);">${x.day} | ${x.time_slot}</td>
+                        <td style="font-weight:600; color:var(--primary-text);">${x.subject_name}</td>
+                        <td style="color:var(--secondary-text);">${x.faculty_name || 'TBD'}</td>
+                        <td><div style="display:inline-flex; align-items:center; gap:5px; background:var(--info); color:var(--info-text); padding:4px 10px; border-radius:100px; font-size:12px; font-weight:600;"><i data-lucide="map-pin" style="width:12px;"></i> ${x.room}</div></td>
+                    </tr>
+                `).join('');
+                if (window.lucide) lucide.createIcons();
+            } catch(e) { console.error(e); }
+        }
+
+        async function loadNotices() {
+            try {
+                const res = await fetch('/api/stakeholder/notices', { headers: { 'Authorization': `Bearer ${tok}` } });
+                const data = await res.json();
+                const box = document.getElementById('notices-container');
+                if(data.length === 0) {
+                    box.innerHTML = '<p style="color:var(--secondary-text); font-size:14px;">No active notices.</p>'; return;
+                }
+                box.innerHTML = data.map(x => `
+                    <div class="soft-card" style="margin-bottom:0;">
+                        <h4 style="color:var(--primary-text); font-weight:700;">${x.title}</h4>
+                        <p style="margin-top:10px; color:var(--secondary-text); font-size:13px; line-height:1.5;">${x.message}</p>
+                    </div>
+                `).join('');
+            } catch(e) {}
+        }
+
+        async function loadAttendance() {
+            try {
+                const res = await fetch('/api/stakeholder/student/attendance', { headers: { 'Authorization': `Bearer ${tok}` } });
+                const data = await res.json();
+                const body = document.getElementById('attendance-rows');
+                if(data.length === 0) {
+                    body.innerHTML = `<tr><td colspan="3" style="text-align:center; color:var(--secondary-text);">No attendance records found.</td></tr>`;
+                    return;
+                }
+                body.innerHTML = data.map(x => `
+                    <tr>
+                        <td style="font-weight:500; font-size:13px;">${new Date(x.date).toLocaleDateString()}</td>
+                        <td style="font-weight:600; color:var(--primary-text);">${x.subject}</td>
+                        <td><span class="${x.status === 'Present' ? 'badge-present' : 'badge-absent'}">${x.status}</span></td>
+                    </tr>
+                `).join('');
+            } catch(e) {}
+        }
+
+        async function loadMaterials() {
+            try {
+                const res = await fetch('/api/stakeholder/materials', { headers: { 'Authorization': `Bearer ${tok}` } });
+                const data = await res.json();
+                const box = document.getElementById('materials-container');
+                if(data.length === 0) {
+                    box.innerHTML = '<p style="color:var(--secondary-text); font-size:14px;">No materials populated.</p>'; return;
+                }
+                box.innerHTML = data.map(x => `
+                    <div class="material-card">
+                        <div style="background:rgba(197, 168, 128, 0.1); padding:12px; border-radius:12px; color:var(--accent);">
+                            <i data-lucide="file" style="width:24px; height:24px;"></i>
+                        </div>
+                        <div>
+                            <div style="font-weight:700; font-size:14px; margin-bottom:5px; color:var(--primary-text);">${x.subject}</div>
+                            <div style="font-size:12px; color:var(--secondary-text); margin-bottom:12px;">By ${x.faculty_name}</div>
+                            <a href="/uploads/materials/${x.stored_name}" download="${x.original_name}" class="btn-secondary" style="font-size:11px; padding: 6px 12px; background:var(--bg-color);">Download PDF</a>
+                        </div>
+                    </div>
+                `).join('');
+                if (window.lucide) lucide.createIcons();
+            } catch(e) {}
+        }
+
+        async function loadBlueprints() {
+            try {
+                const res = await fetch('/api/stakeholder/blueprints', { headers: { 'Authorization': `Bearer ${tok}` } });
+                const data = await res.json();
+                const box = document.getElementById('map-container');
+                if(data.length === 0) {
+                    box.innerHTML = '<p style="color:var(--secondary-text); font-size:14px;">No maps available.</p>'; return;
+                }
+                box.innerHTML = data.map(x => `
+                    <div class="material-card">
+                        <div style="background:var(--info); padding:12px; border-radius:12px; color:var(--info-text);">
+                            <i data-lucide="map" style="width:24px; height:24px;"></i>
+                        </div>
+                        <div>
+                            <div style="font-weight:700; font-size:14px; margin-bottom:5px; color:var(--primary-text);">${x.original_name}</div>
+                            <div style="font-size:12px; color:var(--secondary-text); margin-bottom:12px;">Blueprints Hub</div>
+                            <a href="/uploads/blueprints/${x.stored_name}" target="_blank" class="btn-primary" style="font-size:11px; padding: 6px 12px;">View Map</a>
+                        </div>
+                    </div>
+                `).join('');
+                if (window.lucide) lucide.createIcons();
+            } catch(e) {}
+        }
+
+        async function loadDoubts() {
+            try {
+                const res = await fetch('/api/stakeholder/student/doubts', { headers: { 'Authorization': `Bearer ${tok}` } });
+                const data = await res.json();
+                const box = document.getElementById('doubts-list-container');
+                if(data.length === 0) { box.innerHTML = '<p style="color:var(--secondary-text);">No doubts asked yet.</p>'; return; }
+                
+                box.innerHTML = data.map(x => `
+                    <div class="soft-card" style="padding: 20px; border-left: 4px solid var(--accent);">
+                        <div style="font-size:12px; color:var(--secondary-text); font-weight:600; margin-bottom: 5px;">${x.subject}</div>
+                        <p style="font-weight:500; font-size:14px; margin-bottom: 15px; color:var(--primary-text);">${x.question}</p>
+                        ${x.reply ? `
+                            <div style="background:#F8FAFC; padding:12px 15px; border-radius:8px; font-size:14px; border:1px solid var(--border);">
+                                <span style="font-weight:700; color:var(--info-text); display:block; margin-bottom:4px;">Faculty Response:</span>
+                                ${x.reply}
+                            </div>
+                        ` : `<div style="font-size:12px; color:var(--warning-text); font-style:italic;">Pending Response...</div>`}
+                    </div>
+                `).join('');
+            } catch(e) {}
+        }
+
+        async function loadIssues() {
+            try {
+                const res = await fetch('/api/stakeholder/issues', { headers: { 'Authorization': `Bearer ${tok}` } });
+                const data = await res.json();
+                const box = document.getElementById('complaints-list');
+                if(data.length === 0) { box.innerHTML = '<p style="color:var(--secondary-text);">No complaints filed.</p>'; return; }
+                
+                box.innerHTML = data.map(x => `
+                    <div class="soft-card" style="padding: 15px 20px; display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <div style="font-weight:700; font-size:14px; color:var(--primary-text); margin-bottom:4px;">${x.title}</div>
+                            <div style="font-size:12px; color:var(--secondary-text);">${new Date(x.created_at).toLocaleDateString()}</div>
+                        </div>
+                        <span class="${x.status === 'Resolved' ? 'badge-present' : 'badge-absent'}">${x.status}</span>
+                    </div>
+                `).join('');
+            } catch(e) {}
+        }
+
+        // Submissions
+        document.getElementById('doubt-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            btn.textContent = "Sending...";
+            const res = await fetch('/api/stakeholder/student/doubts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tok}` },
+                body: JSON.stringify({ 
+                    subject: document.getElementById('doubt-subject').value, 
+                    question: document.getElementById('doubt-msg').value 
+                })
+            });
+            if(res.ok) { tBox("Doubt dispatched for review"); e.target.reset(); loadDoubts(); }
+            btn.textContent = "Send to Faculty";
+        });
+
+        document.getElementById('query-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            btn.textContent = "Submitting...";
+            const res = await fetch('/api/stakeholder/issues', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tok}` },
+                body: JSON.stringify({ 
+                    title: document.getElementById('query-title').value, 
+                    description: document.getElementById('query-desc').value 
+                })
+            });
+            if(res.ok) { tBox("Complaint filed into Resolution Hub"); e.target.reset(); loadIssues(); }
+            btn.textContent = "Submit to Resolution Hub";
+        });
+
+        // Logout
+        function logout() { document.getElementById('logout-modal').style.display='flex'; }
+        function closeLogout() { document.getElementById('logout-modal').style.display='none'; }
+        function confirmLogout() { localStorage.clear(); window.location.href='/auth'; }
+
+        async function refreshData(id) {
+            if (id === 'timetable') { loadTimetable(); loadNotices(); }
+            if (id === 'attendance') loadAttendance();
+            if (id === 'materials') loadMaterials();
+            if (id === 'doubts') loadDoubts();
+            if (id === 'complaints') loadIssues();
+            if (id === 'map') loadBlueprints();
+        }
+
+        // Initialize SPA
+        (function init() {
+            document.querySelectorAll('.tab-content').forEach(function(t) {
+                t.style.display = 'none';
+                t.classList.remove('active');
+            });
+            var ov = document.getElementById('timetable');
+            if(ov) { ov.style.display = 'block'; ov.classList.add('active'); }
+            if(window.lucide) lucide.createIcons();
+            loadProfile();
+            loadTimetable();
+            loadNotices();
+
+            // REAL-TIME AUTO REFRESH (Polling Engine)
+            setInterval(() => {
+                const activeTab = document.querySelector('.tab-content.active');
+                if(activeTab) refreshData(activeTab.id);
+            }, 5000);
+        })();
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,1498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Campus | Modern SaaS Admin</title>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700&display=swap');
+
+        :root {
+            --bg-color: linear-gradient(to bottom right, #F8FAFC, #EEF2F7);
+            --sidebar-grad: linear-gradient(to bottom, #1E293B, #0F172A);
+            --card-glass: #FFFFFF;
+            --primary-text: #0F172A;
+            --secondary-text: #64748B;
+            --accent: #C5A880; /* Gold */
+            --accent-soft: rgba(197, 168, 128, 0.15);
+            --success: #DCFCE7;
+            --success-text: #166534;
+            --info: #E0F2FE;
+            --info-text: #075985;
+            --warning: #FEF3C7;
+            --warning-text: #92400E;
+            --danger: #FEE2E2;
+            --danger-text: #991B1B;
+            --purple-pkg: #EDE9FE;
+            --purple-pkg-text: #5B21B6;
+            --border: rgba(0,0,0,0.04);
+            --radius-lg: 18px;
+            --shadow-md: 0 8px 25px rgba(0,0,0,0.06);
+            --shadow-hover: 0 15px 35px rgba(0,0,0,0.08);
+            --transition: all 0.3s ease;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+
+        body { 
+            background: var(--bg-color);
+            color: var(--primary-text); 
+            display: flex; 
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar Refinement */
+        .sidebar {
+            width: 280px;
+            background: var(--sidebar-grad);
+            color: white;
+            height: 100vh;
+            position: fixed;
+            left: 0; top: 0;
+            display: flex;
+            flex-direction: column;
+            padding: 35px 22px;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--accent);
+            letter-spacing: -1px;
+            margin-bottom: 50px;
+            padding-left: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-list { list-style: none; flex: 1; }
+        .nav-item { margin-bottom: 8px; }
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 18px;
+            color: #94A3B8;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 500;
+            font-size: 14px;
+            transition: var(--transition);
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+        }
+
+        .nav-link.active {
+            background: var(--accent-soft);
+            color: white;
+            border-left: 3px solid var(--accent);
+            border-radius: 0 12px 12px 0;
+            padding-left: 15px; /* balance the border */
+        }
+
+        /* Header Refinement */
+        header {
+            position: fixed;
+            top: 0; right: 0;
+            width: calc(100% - 280px);
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 15px 40px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            z-index: 900;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .admin-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 6px 16px;
+            background: white;
+            border-radius: 100px;
+            border: 1px solid rgba(0,0,0,0.05);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .admin-profile:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+
+        .initial-circle {
+            width: 30px; height: 30px;
+            background: #1E293B;
+            color: var(--accent);
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 50%;
+            font-weight: 800; font-size: 13px;
+        }
+
+        /* Main Content */
+        main {
+            margin-left: 280px;
+            padding: 100px 40px 50px;
+            width: calc(100% - 280px);
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Modern SaaS Cards */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+            margin-bottom: 35px;
+        }
+
+        .soft-card {
+            background: var(--card-glass);
+            padding: 28px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border);
+            transition: var(--transition);
+            cursor: pointer;
+            position: relative;
+        }
+
+        .soft-card:hover { 
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .icon-circle {
+            width: 50px; height: 50px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        /* Color Guide - Guiding attention */
+        .color-blue { background: var(--info); color: var(--info-text); }
+        .color-purple { background: var(--purple-pkg); color: var(--purple-pkg-text); }
+        .color-green { background: var(--success); color: var(--success-text); }
+        .color-yellow { background: var(--warning); color: var(--warning-text); }
+        .color-red { background: var(--danger); color: var(--danger-text); }
+
+        .card-val { font-size: 32px; font-weight: 800; color: var(--primary-text); }
+        .card-label { font-size: 13px; color: var(--secondary-text); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        /* Buttons Upgrade */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), #E6D3A3);
+            color: #1E293B;
+            padding: 14px 28px;
+            border-radius: 100px;
+            border: none;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(197, 168, 128, 0.3);
+        }
+
+        .btn-secondary {
+            background: #0F172A;
+            color: white;
+            padding: 14px 28px;
+            border-radius: 100px;
+            border: none;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .btn-secondary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.3);
+        }
+
+        /* Layout Structure */
+        .split-layout {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+        }
+
+        .content-box {
+            background: white;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-md);
+            padding: 30px;
+        }
+
+        .section-title { font-size: 18px; font-weight: 700; margin-bottom: 20px; color: var(--primary-text); }
+
+        /* Table Refinement */
+        .linear-table { width: 100%; border-collapse: collapse; }
+        .linear-table th { text-align: left; padding: 15px 20px; font-size: 11px; color: var(--secondary-text); text-transform: uppercase; border-bottom: 1px solid var(--border); }
+        .linear-table td { padding: 18px 20px; border-bottom: 1px solid rgba(0,0,0,0.02); vertical-align: middle; }
+        .linear-table tr:hover td { background: #F8FAFC; }
+
+        .badge { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; }
+        
+        /* Modals & Inputs */
+        .glass-modal {
+            position: fixed; inset: 0; background: rgba(15, 23, 42, 0.35); backdrop-filter: blur(8px);
+            display: none; align-items: center; justify-content: center; z-index: 2000;
+        }
+        .modal-body {
+            background: white; padding: 24px; border-radius: 20px; width: 480px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+            animation: fadeUp 0.3s ease;
+        }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-input {
+            width: 100%; padding: 12px 20px; border-radius: 10px; border: 1px solid var(--border);
+            outline: none; transition: var(--transition); background: #F8FAFC;
+        }
+        .form-input:focus { background: white; border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+
+        /* Users Page: Light Premium Redesign */
+        .users-hero-card {
+            background: linear-gradient(135deg, #1E293B, #334155);
+            color: white;
+            border-radius: 20px;
+            padding: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.1);
+        }
+
+        .hero-info h2 { font-size: 24px; font-weight: 800; margin-bottom: 5px; }
+        .hero-info p { font-size: 13px; color: #94A3B8; font-weight: 500; }
+
+        .hero-actions { display: flex; gap: 15px; align-items: center; }
+        .glass-search {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 12px 20px;
+            color: white;
+            outline: none;
+            width: 250px;
+            transition: var(--transition);
+        }
+        .glass-search::placeholder { color: #94A3B8; }
+        .glass-search:focus { border-color: var(--accent); background: rgba(255, 255, 255, 0.15); }
+
+        .filter-system {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 30px;
+            overflow-x: auto;
+            padding: 5px;
+        }
+        .filter-pill {
+            padding: 8px 16px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            background: #F1F5F9;
+            color: #334155;
+            white-space: nowrap;
+        }
+        .filter-pill:hover { transform: scale(1.05); }
+        .filter-pill.active {
+            background: linear-gradient(135deg, #6366F1, #8B5CF6);
+            color: white;
+            box-shadow: 0 8px 15px rgba(99, 102, 241, 0.25);
+        }
+
+        .premium-table-wrap {
+            background: #FFFFFF;
+            border-radius: 18px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .premium-table-wrap tr { transition: var(--transition); }
+        .premium-table-wrap tr:hover { 
+            background: #F8FAFC !important; 
+            transform: scale(1.005);
+            z-index: 10;
+        }
+
+        /* Role Badges */
+        .badge-role {
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .bg-student { background: #DCFCE7; color: #166534; }
+        .bg-faculty { background: #F3E8FF; color: #6B21A8; }
+        .bg-guard { background: #DBEAFE; color: #1E40AF; }
+        .bg-worker { background: #FFEDD5; color: #9A3412; }
+        .bg-admin { background: #111827; color: white; }
+
+        .action-icon {
+            cursor: pointer;
+            transition: var(--transition);
+            width: 18px;
+            height: 18px;
+        }
+        .action-icon:hover { transform: scale(1.25); }
+        .i-edit { color: #3B82F6; }
+        .i-del { color: #EF4444; }
+        .i-reset { color: var(--accent); }
+
+
+
+        .form-input { border: 1px solid #E2E8F0; }
+        .form-input:focus { 
+            border-color: #6366F1; 
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15); 
+        }
+
+        /* Course Portfolio: Academic Suite Update */
+        .course-hero-card {
+            background: linear-gradient(135deg, #1E293B, #334155);
+            color: white;
+            border-radius: 20px;
+            padding: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.1);
+        }
+
+        .subject-form-card {
+            background: #FFFFFF;
+            border-radius: 18px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            margin-bottom: 25px;
+            border: 1px solid var(--border);
+            animation: fadeUp 0.4s ease;
+            display: none; /* Toggleable */
+        }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-grid-clean {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+        }
+
+        .premium-footer {
+            background: #F9FAFB;
+            padding: 20px 30px;
+            text-align: right;
+            font-weight: 800;
+            color: var(--accent);
+            font-size: 15px;
+            border-top: 2px solid #F1F5F9;
+        }
+
+        /* Academic Badges */
+        .badge-code { background: #EEF2FF; color: #4F46E5; padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 11px; }
+        .badge-area { background: #E0F2FE; color: #0284C7; padding: 6px 12px; border-radius: 8px; font-weight: 600; font-size: 11px; }
+        .badge-credits { background: #FEF3C7; color: #B45309; padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 11px; }
+
+        /* Toast */
+        .toast-box {
+            position: fixed; bottom: 30px; right: 30px;
+            background: #0F172A; color: white;
+            padding: 14px 28px; border-radius: 100px; font-weight: 600;
+            transform: translateY(100px); transition: 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 3000;
+        }
+        .toast-box.active { transform: translateY(0); }
+
+    </style>
+</head>
+<body>
+
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <i data-lucide="shield-check" style="width: 32px; height: 32px;"></i>
+            <span>Smart Campus</span>
+        </div>
+        <ul class="nav-list">
+            <li class="nav-item">
+                <a href="#" class="nav-link active" id="nav-overview" onclick="switchTab('overview'); return false;">
+                    <i data-lucide="layout-dashboard"></i><span>Overview</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link" id="nav-users" onclick="switchTab('users'); return false;">
+                    <i data-lucide="users"></i><span>Users Registry</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link" id="nav-subjects" onclick="switchTab('subjects'); return false;">
+                    <i data-lucide="book-open"></i><span>Academic Portfolio</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link" id="nav-timetable" onclick="switchTab('timetable'); return false;">
+                    <i data-lucide="calendar"></i><span>Class Schedule</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link" id="nav-notices" onclick="switchTab('notices'); return false;">
+                    <i data-lucide="bell"></i><span>Campus Notices</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link" id="nav-blueprint" onclick="switchTab('blueprint'); return false;">
+                    <i data-lucide="map"></i><span>Blueprint Hub</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link" id="nav-issues" onclick="switchTab('issues'); return false;">
+                    <i data-lucide="alert-triangle"></i><span>Resolution Hub</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <header>
+        <div class="admin-profile">
+            <div class="initial-circle">SA</div>
+            <div style="text-align: left;">
+                <div style="font-weight: 700; font-size: 13px; color: var(--primary-text);">System Admin</div>
+                <div style="font-size: 11px; color: var(--secondary-text);">Root Privileges</div>
+            </div>
+            <i data-lucide="settings" style="width: 14px; color: var(--secondary-text); margin-left:10px;"></i>
+        </div>
+        <button class="btn-secondary" style="margin-left: 15px; padding: 8px 20px; font-size: 12px;" onclick="logout()">Logout</button>
+    </header>
+
+    <main>
+        <!-- Overview (Modern SaaS Style) -->
+        <div id="overview" class="tab-content active">
+            <div class="card-grid">
+                <div class="soft-card" onclick="switchTab('users')" style="cursor:pointer;">
+                    <div class="icon-circle color-blue"><i data-lucide="users"></i></div>
+                    <div class="card-val" id="stat-users">0</div>
+                    <div class="card-label">Total Users</div>
+                </div>
+                <div class="soft-card" onclick="switchTab('subjects')" style="cursor:pointer;">
+                    <div class="icon-circle color-purple"><i data-lucide="book-open"></i></div>
+                    <div class="card-val" id="stat-subjects">0</div>
+                    <div class="card-label">Subjects Portfolio</div>
+                </div>
+                <div class="soft-card" onclick="switchTab('timetable')" style="cursor:pointer;">
+                    <div class="icon-circle color-green"><i data-lucide="calendar"></i></div>
+                    <div class="card-val" id="stat-slots">24</div>
+                    <div class="card-label">Schedule Slots</div>
+                </div>
+                <div class="soft-card" onclick="switchTab('notices')" style="cursor:pointer;">
+                    <div class="icon-circle color-yellow"><i data-lucide="bell"></i></div>
+                    <div class="card-val" id="stat-notices">0</div>
+                    <div class="card-label">Live Notices</div>
+                </div>
+                <!-- Row 2 card -->
+                <div class="soft-card" onclick="switchTab('issues')" style="cursor:pointer;">
+                    <div class="icon-circle color-red"><i data-lucide="life-buoy"></i></div>
+                    <div class="card-val" id="stat-issues">0</div>
+                    <div class="card-label">Resolved Issues</div>
+                </div>
+            </div>
+
+            <div class="split-layout">
+                <div class="content-box">
+                    <h2 class="section-title">Operational Activity</h2>
+                    <div id="activity-log" style="display: grid; gap: 15px;">
+                        <div style="padding: 40px; text-align: center; color: var(--secondary-text);">
+                            <i data-lucide="shield" style="width: 32px; opacity: 0.2; margin-bottom: 10px;"></i>
+                            <p style="font-size: 13px;">System nodes operational. No critical activity logged.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="content-box">
+                    <h2 class="section-title">Direct Triggers</h2>
+                    <div style="display: grid; gap: 12px;">
+                        <button class="btn-primary" onclick="openModal('mod-user')">Onboard New User</button>
+                        <button class="btn-secondary" onclick="switchTab('notices'); setTimeout(() => openModal('mod-notice'), 100)">Publish Announcement</button>
+                        <button class="btn-secondary" style="background:#F1F5F9; color:var(--primary-text);" onclick="switchTab('subjects'); setTimeout(toggleSubjectForm, 100)">Add Curriculum</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Users Registry (Light Premium Redesign) -->
+        <div id="users" class="tab-content">
+            <div class="users-hero-card">
+                <div class="hero-info">
+                    <h2>Manage Campus Users</h2>
+                    <p>Onboard, verify, and manage all campus stakeholders from a unified hub.</p>
+                </div>
+                <div class="hero-actions">
+                    <input type="text" class="glass-search" placeholder="Search Identity (Name/Email)..." onkeyup="searchUsers()" id="u-search">
+                    <button class="btn-primary" onclick="openModal('mod-user')">+ Onboard User</button>
+                </div>
+            </div>
+
+            <div class="filter-system">
+                <button class="filter-pill active" onclick="setFilter('All', this)">All Stakeholders</button>
+                <button class="filter-pill" onclick="setFilter('student', this)">Students</button>
+                <button class="filter-pill" onclick="setFilter('staff', this)">Staff</button>
+                <button class="filter-pill" onclick="setFilter('guard', this)">Guards</button>
+                <button class="filter-pill" onclick="setFilter('worker', this)">Workers</button>
+                <button class="filter-pill" onclick="setFilter('admin', this)">ADMINS</button>
+            </div>
+
+            <div class="premium-table-wrap">
+                <table class="linear-table">
+                    <thead>
+                        <tr>
+                            <th style="padding-left: 30px;">Name & Email</th>
+                            <th>Role</th>
+                            <th>Login Email</th>
+                            <th>Password</th>
+                            <th>Onboarding Date</th>
+                            <th style="text-align: right; padding-right: 30px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="user-rows"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Course Portfolio (Academic Management Redesign) -->
+        <div id="subjects" class="tab-content">
+            <div class="course-hero-card">
+                <div class="hero-info">
+                    <h2>Course Portfolio</h2>
+                    <p>Manage campus academic units, credit allocations, and designated faculty overseers.</p>
+                </div>
+                <button class="btn-primary" onclick="toggleSubjectForm()">+ Add New Subject</button>
+            </div>
+
+            <!-- Inline Registration Form -->
+            <div id="subject-form-container" class="subject-form-card">
+                <h3 style="font-weight: 800; margin-bottom: 20px; font-size: 16px;">Register New Course Component</h3>
+                <form id="s-form-inline">
+                    <div class="form-grid-clean">
+                         <div class="form-group">
+                             <label style="font-size: 11px; font-weight: 700; color: var(--secondary-text); margin-bottom: 5px; display: block;">SUBJECT NAME</label>
+                             <input type="text" name="name" class="form-input" placeholder="e.g., Software Engineering" required>
+                         </div>
+                         <div class="form-group">
+                             <label style="font-size: 11px; font-weight: 700; color: var(--secondary-text); margin-bottom: 5px; display: block;">SUBJECT CODE</label>
+                             <input type="text" name="code" class="form-input" placeholder="e.g., CS202" required>
+                         </div>
+                         <div class="form-group">
+                             <label style="font-size: 11px; font-weight: 700; color: var(--secondary-text); margin-bottom: 5px; display: block;">AREA / DOMAIN</label>
+                             <input type="text" name="area" class="form-input" placeholder="e.g., CR1" value="CR1">
+                         </div>
+                         <div class="form-group">
+                             <label style="font-size: 11px; font-weight: 700; color: var(--secondary-text); margin-bottom: 5px; display: block;">CREDITS</label>
+                             <input type="number" name="credits" class="form-input" value="3">
+                         </div>
+                         <div class="form-group">
+                             <label style="font-size: 11px; font-weight: 700; color: var(--secondary-text); margin-bottom: 5px; display: block;">FACULTY OVERSEER</label>
+                             <input type="text" name="assignedFaculty" class="form-input" placeholder="e.g., Prof. Mitchell">
+                         </div>
+                         <div class="form-group" style="display: flex; align-items: flex-end;">
+                             <button type="submit" class="btn-primary" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #6366F1, #8B5CF6); border-radius: 10px; color:white;">Register Component</button>
+                         </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="premium-table-wrap">
+                <table class="linear-table">
+                    <thead style="background: #F1F5F9;">
+                        <tr>
+                            <th style="padding-left: 30px;">Subject Domain / Name</th>
+                            <th>Reference Code</th>
+                            <th>Unit Credits</th>
+                            <th>Faculty Overlook</th>
+                            <th style="text-align: right; padding-right: 30px;">Operations</th>
+                        </tr>
+                    </thead>
+                    <tbody id="subject-rows"></tbody>
+                </table>
+                <div class="premium-footer" id="credits-totalizer">Total Academic Credits: 0</div>
+            </div>
+        </div>
+
+        <!-- Timetable -->
+        <div id="timetable" class="tab-content">
+             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                <h2 class="section-title" style="margin-bottom: 0;">Academic Scheduling</h2>
+                <button class="btn-primary" onclick="openModal('mod-time')">+ Allocate Slot</button>
+            </div>
+            <div id="time-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 24px;">
+                <!-- Timetable Cards -->
+            </div>
+        </div>
+
+        <!-- Notices -->
+        <div id="notices" class="tab-content">
+             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                <h2 class="section-title" style="margin-bottom: 0;">Live Broadcasts</h2>
+                <button class="btn-secondary" onclick="openModal('mod-notice')">+ Transmit Notice</button>
+            </div>
+            <div id="notice-stack" style="display: grid; gap: 20px;"></div>
+        </div>
+
+        <!-- Blueprint -->
+        <div id="blueprint" class="tab-content">
+             <div class="content-box" style="text-align: center; padding: 60px; border: 2px dashed #E2E8F0; margin-bottom: 30px;" id="u-dropzone">
+                  <i data-lucide="upload-cloud" style="width: 54px; height: 54px; color: var(--accent); margin-bottom: 20px;"></i>
+                  <h3>Digital Infrastructure Maps</h3>
+                  <p style="color: var(--secondary-text); margin: 15px 0 30px;">Upload master architecture files for campus-wide synchronization.</p>
+                  <input type="file" id="blueprint-input" style="display: none;" onchange="handleBlueprintUpload(this)">
+                  <button class="btn-primary" onclick="document.getElementById('blueprint-input').click()">Browse Files</button>
+                  <div id="upload-progress" style="display: none; margin-top: 20px; font-weight: 600; color: var(--accent);">
+                      Uploading... ⏳
+                  </div>
+             </div>
+
+             <div class="premium-table-wrap">
+                <table class="linear-table">
+                    <thead>
+                        <tr>
+                            <th style="padding-left: 30px;">Blueprint Name</th>
+                            <th>Type</th>
+                            <th>Size</th>
+                            <th>Upload Date</th>
+                            <th style="text-align: right; padding-right: 30px;">Operations</th>
+                        </tr>
+                    </thead>
+                    <tbody id="blueprint-rows"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Issues -->
+        <div id="issues" class="tab-content">
+             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                <h2 class="section-title" style="margin-bottom: 0;">Campus Resolution Wall</h2>
+            </div>
+            <div id="issue-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 24px;"></div>
+        </div>
+    </main>
+
+    <!-- Modals -->
+    <div id="mod-user" class="glass-modal" onclick="closeM(event, 'mod-user')">
+        <div class="modal-body">
+             <h2 style="margin-bottom: 25px;">Onboard New stakeholder</h2>
+             <form id="u-form" style="display: grid; gap:15px;">
+                  <input type="text" name="name" class="form-input" placeholder="Full Name" required>
+                  <input type="email" name="loginEmail" class="form-input" placeholder="Campus Email (login email)" required>
+                  <input type="email" name="realEmail" class="form-input" placeholder="Personal Email (send credentials)" required>
+                  <select name="role" class="form-input" required>
+                       <option value="admin">Admin</option>
+                       <option value="student">Student</option>
+                       <option value="staff">Staff</option>
+                       <option value="worker">Worker</option>
+                       <option value="guard">Security Guard</option>
+                  </select>
+                  <input type="password" name="password" id="u-password" class="form-input" placeholder="Default Password" required>
+                  <input type="password" name="confirmPassword" id="u-confirmPassword" class="form-input" placeholder="Confirm Password" required>
+                  <button type="submit" class="btn-primary" style="margin-top: 15px;">Authorize & Notify Identity</button>
+             </form>
+        </div>
+    </div>
+
+    <div id="mod-edit-user" class="glass-modal" onclick="closeM(event, 'mod-edit-user')">
+        <div class="modal-body">
+             <h2 style="margin-bottom: 25px;">Edit Stakeholder</h2>
+             <form id="u-edit-form" style="display: grid; gap:15px;">
+                  <input type="hidden" name="id" id="edit-id">
+                  <input type="text" name="name" id="edit-name" class="form-input" placeholder="Full Name" required>
+                  <input type="email" name="loginEmail" id="edit-loginEmail" class="form-input" placeholder="Campus Email (login email)" required>
+                  <input type="email" name="realEmail" id="edit-realEmail" class="form-input" placeholder="Personal Email" required>
+                  <select name="role" id="edit-role" class="form-input" required>
+                       <option value="admin">Admin</option>
+                       <option value="student">Student</option>
+                       <option value="staff">Staff</option>
+                       <option value="worker">Worker</option>
+                       <option value="guard">Security Guard</option>
+                  </select>
+                  <button type="submit" class="btn-primary" style="margin-top: 15px;">✅ Update User</button>
+             </form>
+        </div>
+    </div>
+
+    <!-- Confirm Delete Modal -->
+    <div id="mod-del-confirm" class="glass-modal" onclick="closeM(event, 'mod-del-confirm')">
+        <div class="modal-body" style="width: 400px; text-align: center;">
+            <h2 style="margin-bottom: 15px;">⚠️ Do you want to delete this user?</h2>
+            <p style="color: var(--secondary-text); margin-bottom: 25px;">This action cannot be undone.</p>
+            <div style="display: flex; gap: 15px; justify-content: center;">
+                <button class="btn-secondary" onclick="document.getElementById('mod-del-confirm').style.display='none'">Cancel</button>
+                <button class="btn-primary" style="background: #EF4444; color: white;" onclick="proceedDelete()">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Edit Modal -->
+    <div id="mod-edit-confirm" class="glass-modal" onclick="closeM(event, 'mod-edit-confirm')">
+        <div class="modal-body" style="width: 400px; text-align: center;">
+            <h2 style="margin-bottom: 25px;">Do you want to edit this user?</h2>
+            <div style="display: flex; gap: 15px; justify-content: center;">
+                <button class="btn-secondary" onclick="document.getElementById('mod-edit-confirm').style.display='none'">Cancel</button>
+                <button class="btn-primary" onclick="proceedEdit()">Continue</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="mod-subject" class="glass-modal" onclick="closeM(event, 'mod-subject')"><div class="modal-body"><h2>Curriculum Unit</h2><form id="s-form-new" style="display:grid; gap:12px;"><input type="text" name="name" class="form-input" placeholder="Name" required><input type="text" name="code" class="form-input" placeholder="Code" required><input type="number" name="credits" class="form-input" value="3" required><input type="text" name="assignedFaculty" class="form-input" placeholder="Faculty Overseer"><button type="submit" class="btn-primary">Register</button></form></div></div>
+    
+    <!-- Confirm Delete Subject Modal -->
+    <div id="mod-subj-del-confirm" class="glass-modal" onclick="closeM(event, 'mod-subj-del-confirm')">
+        <div class="modal-body" style="width: 350px; text-align: center;">
+            <h2 style="margin-bottom: 15px;">⚠️ Delete Subject</h2>
+            <p style="color: var(--secondary-text); margin-bottom: 25px;">Are you sure you want to delete this subject?<br><br>This action cannot be undone.</p>
+            <div style="display: flex; gap: 15px; justify-content: center;">
+                <button class="btn-secondary" style="background: #E5E7EB; color: #374151; border-radius: 8px;" onclick="document.getElementById('mod-subj-del-confirm').style.display='none'">Cancel</button>
+                <button class="btn-primary" style="background: #EF4444; color: white; border-radius: 8px;" onclick="confirmSubjDelete()">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Edit Subject Modal -->
+    <div id="mod-subj-edit-confirm" class="glass-modal" onclick="closeM(event, 'mod-subj-edit-confirm')">
+        <div class="modal-body" style="width: 350px; text-align: center;">
+            <h2 style="margin-bottom: 25px;">✏️ Edit Subject</h2>
+            <p style="color: var(--secondary-text); margin-bottom: 25px;">Do you want to edit this subject?</p>
+            <div style="display: flex; gap: 15px; justify-content: center;">
+                <button class="btn-secondary" style="background: #E5E7EB; color: #374151; border-radius: 8px;" onclick="document.getElementById('mod-subj-edit-confirm').style.display='none'">Cancel</button>
+                <button class="btn-primary" style="background: linear-gradient(135deg, #6366F1, #8B5CF6); color: white; border-radius: 8px;" onclick="confirmSubjEdit()">Continue</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Subject Form Modal -->
+    <div id="mod-subj-edit" class="glass-modal" onclick="closeM(event, 'mod-subj-edit')">
+        <div class="modal-body">
+            <h2>✏️ Edit Subject Details</h2>
+            <form id="s-edit-form" style="display:grid; gap:12px; margin-top:20px;">
+                <input type="hidden" name="id" id="edit-subj-id">
+                <input type="text" name="name" id="edit-subj-name" class="form-input" placeholder="Name" required>
+                <input type="text" name="code" id="edit-subj-code" class="form-input" placeholder="Code" required>
+                <input type="number" name="credits" id="edit-subj-credits" class="form-input" value="3" required>
+                <input type="text" name="assignedFaculty" id="edit-subj-faculty" class="form-input" placeholder="Faculty Overseer">
+                <div style="display: flex; gap: 15px; margin-top: 10px;">
+                    <button type="button" class="btn-secondary" style="background: #E5E7EB; color: #374151; border-radius: 8px; flex: 1;" onclick="document.getElementById('mod-subj-edit').style.display='none'">Cancel</button>
+                    <button type="submit" class="btn-primary" style="background: linear-gradient(135deg, #6366F1, #8B5CF6); color: white; border-radius: 8px; flex: 1;">✅ Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="mod-time" class="glass-modal" onclick="closeM(event, 'mod-time')"><div class="modal-body"><h2>Allocate Resource</h2><form id="t-form" style="display:grid; gap:12px;"><select name="day" class="form-input"><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option></select><input type="text" name="timeSlot" class="form-input" placeholder="Time"><input type="text" name="subjectName" class="form-input" placeholder="Subject"><input type="text" name="facultyName" class="form-input" placeholder="Faculty"><input type="text" name="room" class="form-input" placeholder="Room"><input type="text" name="batch" class="form-input" placeholder="Batch"><button type="submit" class="btn-primary">Allocate</button></form></div></div>
+    <div id="mod-notice" class="glass-modal" onclick="closeM(event, 'mod-notice')"><div class="modal-body"><h2>Compose Notice</h2><form id="n-form" style="display:grid; gap:12px;"><input type="text" name="title" class="form-input" placeholder="Heading"><select name="targetRoles" class="form-input"><option value="Everyone">Everyone</option><option value="student">Students</option><option value="staff">Staff</option><option value="guard">Guards</option><option value="worker">Workers</option></select><select name="duration_hours" class="form-input"><option value="1">1 Hour Duration</option><option value="24" selected>24 Hours Duration</option><option value="48">2 Days Duration</option><option value="0">Indefinite (No Expiry)</option></select><textarea name="message" class="form-input" style="height:100px;" placeholder="Message Body"></textarea><button type="submit" class="btn-secondary" style="width:100%">Broadast Identity</button></form></div></div>
+    
+    <div id="mod-logout-confirm" class="glass-modal" onclick="closeM(event, 'mod-logout-confirm')">
+        <div class="modal-body" style="text-align:center; padding:40px;">
+            <i data-lucide="log-out" style="width:40px; height:40px; color:var(--danger-text); margin-bottom:20px;"></i>
+            <h2>Confirm Logout</h2>
+            <p style="color:var(--secondary-text); margin-bottom:30px;">Are you sure you want to end your administration session?</p>
+            <div style="display:flex; gap:15px; justify-content:center;">
+                <button class="btn-primary" style="background:var(--danger); border:none;" onclick="confirmLogout()">Yes, Logout</button>
+                <button class="btn-primary" style="background:var(--secondary-text); border:none;" onclick="document.getElementById('mod-logout-confirm').style.display='none'">Cancel</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="t-bin" class="toast-box">System confirmed status.</div>
+
+    <script>
+        const tok = localStorage.getItem('sc_token');
+        const storedRole = (localStorage.getItem('sc_role') || '').toLowerCase();
+        if(!tok || storedRole !== 'admin') window.location.href = '/auth';
+
+        // === BULLETPROOF TAB SWITCHER ===
+        function switchTab(id) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(function(t) {
+                t.style.display = 'none';
+                t.classList.remove('active');
+            });
+            // Show the target tab
+            var target = document.getElementById(id);
+            if (!target) target = document.getElementById('overview');
+            target.style.display = 'block';
+            target.classList.add('active');
+            // Sync sidebar active state
+            document.querySelectorAll('.nav-link').forEach(function(l) { l.classList.remove('active'); });
+            var navLink = document.getElementById('nav-' + id);
+            if (navLink) navLink.classList.add('active');
+            // Load data for the tab
+            loadStat();
+            if (id === 'users') loadUsrs();
+            else if (id === 'subjects') loadSubj();
+            else if (id === 'timetable') loadTim();
+            else if (id === 'notices') loadNot();
+            else if (id === 'blueprint') loadBlup();
+            else if (id === 'issues') loadIss();
+        }
+
+        function navigate(path) {
+            var tabMap = {
+                '/admin-dashboard': 'overview', '/users': 'users', '/subjects': 'subjects',
+                '/timetable': 'timetable', '/notices': 'notices', '/blueprint': 'blueprint', '/issues': 'issues'
+            };
+            switchTab(tabMap[path] || 'overview');
+        }
+
+        async function refreshData(tabId) {
+            loadStat();
+            if (tabId === 'users') loadUsrs();
+            else if (tabId === 'subjects') loadSubj();
+            else if (tabId === 'timetable') loadTim();
+            else if (tabId === 'notices') loadNot();
+            else if (tabId === 'blueprint') loadBlup();
+            else if (tabId === 'issues') loadIss();
+        }
+
+        function tBox(msg) {
+            const t = document.getElementById('t-bin');
+            t.textContent = msg;
+            t.classList.add('active');
+            setTimeout(() => t.classList.remove('active'), 3000);
+        }
+
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeM(e, id) { if(e.target.id === id) document.getElementById(id).style.display = 'none'; }
+
+        // Logic
+        async function loadStat() {
+            try {
+                const res = await fetch('/api/admin/stats', { headers: { 'Authorization': `Bearer ${tok}` } });
+                if(!res.ok) throw new Error('API Fail');
+                const d = await res.json();
+                document.getElementById('stat-users').textContent = d.totalUsers || 0;
+                document.getElementById('stat-subjects').textContent = d.totalSubjects || 0;
+                document.getElementById('stat-notices').textContent = d.totalNotices || 0;
+                document.getElementById('stat-slots').textContent = d.totalSchedules || 0;
+                document.getElementById('stat-issues').textContent = d.resolvedIssues || 0;
+                console.log('[Stats] Visuals updated successfully');
+            } catch(e) {
+                console.error('[Stats] Fetch Error:', e);
+            }
+        }
+
+        async function loadUsrs(f = 'All') {
+            const res = await fetch(`/api/admin/users?role=${f}`, { headers: { 'Authorization': `Bearer ${tok}` } });
+            const u = await res.json();
+            const b = document.getElementById('user-rows');
+            b.innerHTML = '';
+            u.forEach(x => {
+                const r = x.role.toLowerCase();
+                const bc = r === 'student' ? 'bg-student' : r === 'staff' ? 'bg-faculty' : r === 'guard' ? 'bg-guard' : r === 'worker' ? 'bg-worker' : 'bg-admin';
+                b.innerHTML += `
+                    <tr>
+                        <td style="padding-left: 30px;">
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                <div class="initial-circle" style="background:#F1F5F9; color:#0F172A; width:36px; height:36px;">${x.name[0].toUpperCase()}</div>
+                                <div>
+                                    <div style="font-weight:700; font-size:14px; color:var(--primary-text);">${x.name}</div>
+                                    <div style="font-size:11px; color:var(--secondary-text);">${x.real_email || x.login_email}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge-role ${bc}">${x.role}</span>
+                            ${r === 'guard' && x.current_status ? `<div style="margin-top:6px; font-size:10px; font-weight:700; color:var(--accent); text-transform:uppercase;">[ ${x.current_status} ]</div>` : ''}
+                        </td>
+                        <td><div style="font-size:12px; font-weight:500; color:var(--secondary-text);">${x.login_email}</div></td>
+                        <td>
+                            <div style="font-size:12px; font-weight:500; color:var(--secondary-text); display:flex; align-items:center; gap:8px;" class="pw-col" data-pw="${x.temp_password || ''}">
+                                <span>********</span>
+                            </div>
+                        </td>
+                        <td><div style="font-size:12px; font-weight:500; color:var(--secondary-text);">${new Date(x.created_at).toLocaleDateString()}</div></td>
+                        <td style="text-align: right; padding-right: 30px;">
+                            <div style="display:flex; justify-content:flex-end; gap:15px;">
+                                <i data-lucide="edit-3" class="action-icon i-edit" title="Edit Profile" onclick="confirmEdit(${x.id}, '${x.name.replace(/'/g, "\\'")}', '${x.login_email}', '${x.real_email}', '${x.role}')"></i>
+                                <i data-lucide="trash-2" class="action-icon i-del" onclick="confirmDel(${x.id})" title="Delete User"></i>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            lucide.createIcons();
+            
+            document.querySelectorAll('.pw-col').forEach(col => {
+                col.addEventListener('mouseenter', () => {
+                    if(!col.querySelector('.pw-toggle')) {
+                        col.innerHTML += `<i data-lucide="eye" class="pw-toggle" style="width: 14px; cursor: pointer; color: #6366F1;" title="View password"></i>`;
+                        lucide.createIcons();
+                        col.querySelector('.pw-toggle').addEventListener('click', () => {
+                            const span = col.querySelector('span');
+                            const pwd = col.getAttribute('data-pw');
+                            if(span.textContent === '********') {
+                                span.textContent = pwd && pwd !== 'null' ? pwd : 'User Defined'; // fallback if password cleared
+                                col.querySelector('.pw-toggle').setAttribute('data-lucide', 'eye-off');
+                                setTimeout(() => {
+                                    span.textContent = '********';
+                                    const tog = col.querySelector('.pw-toggle');
+                                    if(tog) { tog.setAttribute('data-lucide', 'eye'); lucide.createIcons(); }
+                                }, 3000);
+                            } else {
+                                span.textContent = '********';
+                                col.querySelector('.pw-toggle').setAttribute('data-lucide', 'eye');
+                            }
+                            lucide.createIcons();
+                        });
+                    }
+                });
+                col.addEventListener('mouseleave', () => {
+                    const tog = col.querySelector('.pw-toggle');
+                    if(tog) tog.remove();
+                });
+            });
+        }
+
+        function setFilter(role, el) {
+            document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+            el.classList.add('active');
+            loadUsrs(role);
+        }
+
+        document.getElementById('u-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const btn = form.querySelector('button[type="submit"]');
+            
+            const pass = document.getElementById('u-password').value;
+            const conf = document.getElementById('u-confirmPassword').value;
+            if(pass !== conf) {
+                tBox('Passwords do not match');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.style.opacity = '0.6';
+            btn.style.cursor = 'not-allowed';
+            const oldText = btn.textContent;
+            btn.textContent = 'Creating... ⏳';
+
+            try {
+                const res = await fetch('/api/admin/users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tok}` },
+                    body: JSON.stringify(Object.fromEntries(new FormData(form)))
+                });
+                
+                if(res.ok) { 
+                    tBox('✅ User created & credentials sent'); 
+                    document.getElementById('mod-user').style.display='none'; 
+                    refreshData('users'); 
+                    form.reset(); 
+                } else {
+                    const err = await res.json();
+                    tBox('Error: ' + (err.message || 'Creating user')); 
+                }
+            } catch (err) {
+                tBox('Error creating user');
+            } finally {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                btn.style.cursor = 'pointer';
+                btn.textContent = oldText;
+            }
+        };
+
+        // Edit Functionality
+        let userToEdit = null;
+        function confirmEdit(id, name, loginEmail, realEmail, role) {
+            userToEdit = { id, name, loginEmail, realEmail, role };
+            document.getElementById('mod-edit-confirm').style.display = 'flex';
+        }
+
+        function proceedEdit() {
+            document.getElementById('mod-edit-confirm').style.display = 'none';
+            document.getElementById('edit-id').value = userToEdit.id;
+            document.getElementById('edit-name').value = userToEdit.name;
+            document.getElementById('edit-loginEmail').value = userToEdit.loginEmail;
+            document.getElementById('edit-realEmail').value = userToEdit.realEmail && userToEdit.realEmail !== 'null' ? userToEdit.realEmail : userToEdit.loginEmail;
+            document.getElementById('edit-role').value = userToEdit.role;
+            openModal('mod-edit-user');
+        }
+
+        document.getElementById('u-edit-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const data = Object.fromEntries(new FormData(e.target));
+            const res = await fetch(`/api/admin/users/${data.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tok}` },
+                body: JSON.stringify(data)
+            });
+            if(res.ok) { tBox('✏️ User Updated'); document.getElementById('mod-edit-user').style.display='none'; refreshData('users'); }
+            else { tBox('Error updating user'); }
+        };
+
+        // Delete Functionality
+        let userToDelete = null;
+        function confirmDel(id) {
+            userToDelete = id;
+            document.getElementById('mod-del-confirm').style.display = 'flex';
+        }
+
+        async function proceedDelete() {
+            if(userToDelete) {
+                const res = await fetch(`/api/admin/users/${userToDelete}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${tok}` } });
+                if(res.ok) {
+                    tBox('❌ User Deleted');
+                    document.getElementById('mod-del-confirm').style.display = 'none';
+                    refreshData('users');
+                }
+            }
+        }
+
+        // Portfolio Redesign Logic
+        async function loadSubj() {
+            const r = await fetch('/api/admin/subjects', { headers: { 'Authorization': `Bearer ${tok}` } });
+            const s = await r.json();
+            const b = document.getElementById('subject-rows');
+            const totalEl = document.getElementById('credits-totalizer');
+            b.innerHTML = '';
+            let total = 0;
+
+            s.forEach(x => {
+                total += parseInt(x.credits || 0);
+                b.innerHTML += `
+                    <tr>
+                        <td style="padding-left: 30px;">
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                <span class="badge-area">${x.area || 'CR1'}</span>
+                                <div style="font-weight:700; font-size:14px; color:var(--primary-text);">${x.name}</div>
+                            </div>
+                        </td>
+                        <td><span class="badge-code">${x.code}</span></td>
+                        <td><span class="badge-credits">${x.credits} CR</span></td>
+                        <td><div style="font-size:12px; font-weight:500; color:var(--secondary-text);">${x.assigned_faculty || 'Unallocated'}</div></td>
+                        <td style="text-align: right; padding-right: 30px;">
+                            <div style="display:flex; justify-content:flex-end; gap:15px;">
+                                <i data-lucide="edit-3" class="action-icon i-edit" title="Edit Component" onclick="handleSubjEditClick(${x.id}, '${x.name.replace(/'/g, "\\'")}', '${x.code.replace(/'/g, "\\'")}', ${x.credits}, '${(x.assigned_faculty || '').replace(/'/g, "\\'")}')"></i>
+                                <i data-lucide="trash-2" class="action-icon i-del" title="Exclude Component" onclick="handleSubjDeleteClick(${x.id})"></i>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            totalEl.textContent = `Total Academic Credits: ${total}`;
+            lucide.createIcons();
+        }
+
+        function toggleSubjectForm() {
+            const f = document.getElementById('subject-form-container');
+            f.style.display = (f.style.display === 'block') ? 'none' : 'block';
+        }
+
+        document.getElementById('s-form-inline').onsubmit = async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const btn = form.querySelector('button[type="submit"]');
+            
+            btn.disabled = true;
+            btn.style.opacity = '0.6';
+            btn.style.cursor = 'not-allowed';
+            const oldText = btn.textContent;
+            btn.textContent = 'Registering... ⏳';
+
+            try {
+                const res = await fetch('/api/admin/subjects', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tok}` },
+                    body: JSON.stringify(Object.fromEntries(new FormData(form)))
+                });
+                
+                if(res.ok) { 
+                    tBox('Success: Course Component Registered ✅'); 
+                    const modSubj = document.getElementById('mod-subject');
+                    if (modSubj) modSubj.style.display = 'none';
+                    refreshData('subjects'); 
+                    form.reset(); 
+                } else {
+                    const errorMsg = await res.json();
+                    tBox(`⚠️ Failed: ${errorMsg.message || 'Subject code must be unique'}`); 
+                }
+            } catch (err) {
+                console.error(err);
+                tBox('⚠️ Unable to register subject.'); 
+            } finally {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                btn.style.cursor = 'pointer';
+                btn.textContent = oldText;
+            }
+        };
+
+        // Subject Edit/Delete Flow
+        let selectedSubject = null;
+
+        function handleSubjDeleteClick(id) {
+            selectedSubject = { id };
+            document.getElementById('mod-subj-del-confirm').style.display = 'flex';
+        }
+
+        async function confirmSubjDelete() {
+            if(selectedSubject) {
+                try {
+                    const res = await fetch(`/api/admin/subjects/${selectedSubject.id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${tok}` } });
+                    if(res.ok) {
+                        tBox('Subject deleted successfully 🗑');
+                        document.getElementById('mod-subj-del-confirm').style.display = 'none';
+                        refreshData('subjects');
+                    } else {
+                        tBox('Error deleting subject ❌');
+                    }
+                } catch (err) {
+                    console.error(err);
+                    tBox('Error deleting subject ❌');
+                }
+            }
+        }
+
+        function handleSubjEditClick(id, name, code, credits, faculty) {
+            selectedSubject = { id, name, code, credits, assignedFaculty: faculty };
+            document.getElementById('mod-subj-edit-confirm').style.display = 'flex';
+        }
+
+        function confirmSubjEdit() {
+            document.getElementById('mod-subj-edit-confirm').style.display = 'none';
+            document.getElementById('edit-subj-id').value = selectedSubject.id;
+            document.getElementById('edit-subj-name').value = selectedSubject.name;
+            document.getElementById('edit-subj-code').value = selectedSubject.code;
+            document.getElementById('edit-subj-credits').value = selectedSubject.credits;
+            document.getElementById('edit-subj-faculty').value = selectedSubject.assignedFaculty;
+            document.getElementById('mod-subj-edit').style.display = 'flex';
+        }
+
+        document.getElementById('s-edit-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const btn = form.querySelector('button[type="submit"]');
+            const data = Object.fromEntries(new FormData(form));
+
+            btn.disabled = true;
+            btn.style.opacity = '0.6';
+            btn.style.cursor = 'not-allowed';
+            const oldText = btn.textContent;
+            btn.textContent = 'Updating... ⏳';
+
+            try {
+                const res = await fetch(`/api/admin/subjects/${data.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tok}` },
+                    body: JSON.stringify(data)
+                });
+                
+                if(res.ok) { 
+                    tBox('Subject updated successfully ✅'); 
+                    document.getElementById('mod-subj-edit').style.display='none'; 
+                    refreshData('subjects'); 
+                } else {
+                    tBox('⚠️ Unable to update subject. Try again.'); 
+                }
+            } catch (err) {
+                console.error(err);
+                tBox('⚠️ Unable to update subject. Try again.');
+            } finally {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                btn.style.cursor = 'pointer';
+                btn.textContent = oldText;
+            }
+        };
+
+        // Other Skeletal logic
+        // Academic Scheduling Logic
+        async function loadTim() {
+            try {
+                const r = await fetch('/api/admin/schedules', { headers: { 'Authorization': `Bearer ${tok}` } });
+                const d = await r.json();
+                const box = document.getElementById('time-grid');
+                box.innerHTML = '';
+                
+                if (d.length === 0) {
+                    box.innerHTML = '<div style="grid-column: 1/-1; padding: 40px; text-align: center; color: var(--secondary-text);">No academic slots allocated yet.</div>';
+                    return;
+                }
+
+                d.forEach(x => {
+                    box.innerHTML += `
+                        <div class="soft-card" style="padding:22px; position:relative; overflow: visible;">
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
+                                <div style="font-weight:800; font-size:11px; color:#C5A880; letter-spacing:0.05em; text-transform:uppercase; display:flex; align-items:center;">
+                                    <i data-lucide="calendar" style="width:12px; height:12px; margin-right:4px;"></i>${x.day}
+                                </div>
+                                <div style="font-weight:700; font-size:10px; color:var(--secondary-text); background:rgba(0,0,0,0.03); padding:4px 10px; border-radius:100px; display:flex; align-items:center;">
+                                    <i data-lucide="clock" style="width:10px; height:10px; margin-right:4px;"></i>${x.time_slot}
+                                </div>
+                            </div>
+                            <h4 style="font-size:16px; font-weight:800; color:var(--primary-text); margin-bottom:15px; border-left: 3px solid #C5A880; padding-left: 12px;">${x.subject_name}</h4>
+                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; border-top:1px solid rgba(0,0,0,0.05); padding-top:15px; margin-top:5px;">
+                                <div style="font-size:11px; color:var(--secondary-text); display:flex; align-items:center;">
+                                    <i data-lucide="map-pin" style="width:11px; height:11px; margin-right:5px; color:#C5A880;"></i><strong>Room:</strong>&nbsp;${x.room || 'N/A'}
+                                </div>
+                                <div style="font-size:11px; color:var(--secondary-text); display:flex; align-items:center;">
+                                    <i data-lucide="users" style="width:11px; height:11px; margin-right:5px; color:#C5A880;"></i><strong>Batch:</strong>&nbsp;${x.batch || 'All'}
+                                </div>
+                            </div>
+                            <div style="margin-top:12px; font-size:11px; color:var(--secondary-text); font-style:italic; border-top: 1px dotted rgba(0,0,0,0.05); padding-top: 8px; display:flex; align-items:center;">
+                                <i data-lucide="user" style="width:11px; height:11px; margin-right:5px; opacity:0.6;"></i>${x.faculty_name || 'Unassigned Faculty'}
+                            </div>
+                            <button title="Delete Slot" style="position:absolute; bottom:20px; right:20px; border:none; background:none; cursor:pointer;" onclick="deleteSch(${x.id})">
+                                <i data-lucide="trash-2" style="width:14px; height:14px; color:#EF4444; opacity:0.3;" class="i-del"></i>
+                            </button>
+                        </div>
+                    `;
+                });
+                lucide.createIcons();
+            } catch (err) {
+                console.error('Error loading schedules:', err);
+                document.getElementById('time-grid').innerHTML = '<div style="color:red; padding:20px;">Failed to load timetable. Check connection.</div>';
+            }
+        }
+
+        document.getElementById('t-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const btn = form.querySelector('button[type="submit"]');
+            const data = Object.fromEntries(new FormData(form));
+
+            btn.disabled = true;
+            btn.textContent = 'Allocating...';
+
+            try {
+                const res = await fetch('/api/admin/schedules', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tok}` },
+                    body: JSON.stringify(data)
+                });
+                if(res.ok) {
+                    tBox('✅ Academic Slot Allocated');
+                    document.getElementById('mod-time').style.display='none';
+                    refreshData('timetable');
+                    form.reset();
+                } else {
+                    tBox('⚠️ Error allocating slot');
+                }
+            } catch (err) {
+                console.error(err);
+                tBox('⚠️ Connection Error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Allocate';
+            }
+        };
+
+        async function deleteSch(id) {
+            if(!confirm('Exclude this slot from the academic schedule?')) return;
+            try {
+                const res = await fetch(`/api/admin/schedules/${id}`, { 
+                    method: 'DELETE', 
+                    headers: { 'Authorization': `Bearer ${tok}` } 
+                });
+                if(res.ok) { 
+                    tBox('🗑 Slot Removed Successfully'); 
+                    refreshData('timetable'); 
+                } else {
+                    tBox('⚠️ Failed to remove slot');
+                }
+            } catch (err) {
+                console.error(err);
+                tBox('⚠️ Connection Error');
+            }
+        }
+
+        async function loadNot() {
+            const r = await fetch('/api/admin/notices', { headers: { 'Authorization': `Bearer ${tok}` } });
+            const d = await r.json();
+            const box = document.getElementById('notice-stack');
+            box.innerHTML = '';
+            d.forEach(x => {
+                box.innerHTML += `<div class="content-box" style="padding:25px;">
+                    <h4 style="font-weight:700; color:var(--primary-text);">${x.title}</h4>
+                    <div style="color:var(--secondary-text); font-size:13px; margin-top:10px; line-height:1.5;">${x.message}</div>
+                </div>`;
+            });
+        }
+
+        async function loadIss() {
+            const r = await fetch('/api/admin/issues', { headers: { 'Authorization': `Bearer ${tok}` } });
+            const d = await r.json();
+            const box = document.getElementById('issue-grid');
+            box.innerHTML = '';
+            
+            // Only show Pending issues in the actionable grid
+            const pending = d.filter(x => x.status === 'Pending');
+            
+            if(pending.length === 0) {
+                box.innerHTML = '<div style="grid-column: 1/-1; padding: 40px; text-align: center; color: var(--secondary-text);">No pending issues in Resolution Hub.</div>';
+                return;
+            }
+
+            pending.forEach(x => {
+                const isEmergency = x.title.includes('EMERGENCY');
+                box.innerHTML += `
+                <div class="soft-card" style="padding:25px; ${isEmergency ? 'border: 2px solid #EF4444; background: #fffcfc;' : ''}">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
+                         <span style="font-weight:700; font-size:11px; ${isEmergency ? 'color:#EF4444;' : 'color:var(--warning-text);'}">${isEmergency ? '🚨 EMERGENCY' : x.status}</span>
+                         <span style="font-size:10px; color:var(--secondary-text)">Reported by ${x.reporter_name}</span>
+                    </div>
+                    <h4 style="font-weight:700; color:var(--primary-text);">${x.title}</h4>
+                    <p style="font-size:12px; color:var(--secondary-text); margin-top:10px;">${x.description}</p>
+                    <button class="btn-primary" style="padding:8px 20px; font-size:10px; margin-top:20px; width:100%; ${isEmergency ? 'background:#EF4444; color:white;' : ''}" onclick="resI(${x.id})">Mark Resolved</button>
+                </div>`;
+            });
+        }
+
+        document.getElementById('n-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const res = await fetch('/api/admin/notices', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tok}` },
+                body: JSON.stringify(Object.fromEntries(new FormData(form)))
+            });
+            if(res.ok) {
+                tBox('📢 Notice Published');
+                document.getElementById('mod-notice').style.display='none';
+                refreshData('notices');
+                form.reset();
+            } else {
+                tBox('Error publishing notice');
+            }
+        };
+
+        // Blueprint Hub Logic
+        async function loadBlup() {
+            const res = await fetch('/api/admin/blueprints', { headers: { 'Authorization': `Bearer ${tok}` } });
+            const data = await res.json();
+            const b = document.getElementById('blueprint-rows');
+            b.innerHTML = '';
+            data.forEach(x => {
+                b.innerHTML += `
+                    <tr>
+                        <td style="padding-left: 30px;">
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                <i data-lucide="file-text" style="width:18px; color:var(--accent);"></i>
+                                <div style="font-weight:700; font-size:14px; color:var(--primary-text);">${x.original_name}</div>
+                            </div>
+                        </td>
+                        <td><span style="font-size:11px; font-weight:700; color:var(--secondary-text);">${x.file_type.split('/')[1].toUpperCase()}</span></td>
+                        <td><div style="font-size:12px; font-weight:500; color:var(--secondary-text);">${(x.file_size / 1024 / 1024).toFixed(2)} MB</div></td>
+                        <td><div style="font-size:12px; font-weight:500; color:var(--secondary-text);">${new Date(x.created_at).toLocaleDateString()}</div></td>
+                        <td style="text-align: right; padding-right: 30px;">
+                            <div style="display:flex; justify-content:flex-end; gap:15px;">
+                                <a href="/uploads/blueprints/${x.stored_name}" target="_blank" title="View/Download"><i data-lucide="external-link" class="action-icon i-edit"></i></a>
+                                <i data-lucide="trash-2" class="action-icon i-del" title="Delete Blueprint" onclick="deleteBlup(${x.id})"></i>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            lucide.createIcons();
+        }
+
+        async function handleBlueprintUpload(input) {
+            const file = input.files[0];
+            if(!file) return;
+
+            const progress = document.getElementById('upload-progress');
+            progress.style.display = 'block';
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const res = await fetch('/api/admin/blueprints', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${tok}` },
+                    body: formData
+                });
+                if(res.ok) {
+                    tBox('✅ Blueprint uploaded successfully');
+                    refreshData('blueprint');
+                } else {
+                    const err = await res.json();
+                    tBox('Error: ' + (err.message || 'Upload failed'));
+                }
+            } catch(e) {
+                tBox('Error uploading blueprint');
+            } finally {
+                progress.style.display = 'none';
+                input.value = '';
+            }
+        }
+
+        async function deleteBlup(id) {
+            if(!confirm('Are you sure you want to delete this blueprint?')) return;
+            const res = await fetch(`/api/admin/blueprints/${id}`, { 
+                method: 'DELETE', 
+                headers: { 'Authorization': `Bearer ${tok}` } 
+            });
+            if(res.ok) { tBox('🗑 Blueprint deleted'); refreshData('blueprint'); }
+        }
+
+        async function resI(id) {
+            await fetch(`/api/admin/issues/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tok}` },
+                body: JSON.stringify({ status: 'Resolved' })
+            });
+            tBox('Issue Resolution Confirmed'); refreshData('issues');
+        }
+
+        function logout() { document.getElementById('mod-logout-confirm').style.display='flex'; }
+        function confirmLogout() { localStorage.clear(); window.location.href='/auth'; }
+
+        // === INITIALIZATION ===
+        (function init() {
+            document.querySelectorAll('.tab-content').forEach(function(t) {
+                t.style.display = 'none';
+                t.classList.remove('active');
+            });
+            var ov = document.getElementById('overview');
+            if(ov) { ov.style.display = 'block'; ov.classList.add('active'); }
+            if(window.lucide) lucide.createIcons();
+            loadStat();
+
+            // REAL-TIME AUTO REFRESH (Polling Engine)
+            setInterval(() => {
+                const activeTab = document.querySelector('.tab-content.active');
+                if(activeTab) {
+                    refreshData(activeTab.id);
+                }
+            }, 5000);
+        })();
+    </script>
+</body>
+</html>
