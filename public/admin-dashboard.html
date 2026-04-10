@@ -897,6 +897,7 @@
                 document.getElementById('stat-users').textContent = d.totalUsers || 0;
                 document.getElementById('stat-subjects').textContent = d.totalSubjects || 0;
                 document.getElementById('stat-notices').textContent = d.totalNotices || 0;
+                document.getElementById('stat-slots').textContent = d.totalSchedules || 0;
                 document.getElementById('stat-issues').textContent = d.resolvedIssues || 0;
                 console.log('[Stats] Visuals updated successfully');
             } catch(e) {
@@ -923,7 +924,10 @@
                                 </div>
                             </div>
                         </td>
-                        <td><span class="badge-role ${bc}">${x.role}</span></td>
+                        <td>
+                            <span class="badge-role ${bc}">${x.role}</span>
+                            ${r === 'guard' && x.current_status ? `<div style="margin-top:6px; font-size:10px; font-weight:700; color:var(--accent); text-transform:uppercase;">[ ${x.current_status} ]</div>` : ''}
+                        </td>
                         <td><div style="font-size:12px; font-weight:500; color:var(--secondary-text);">${x.login_email}</div></td>
                         <td>
                             <div style="font-size:12px; font-weight:500; color:var(--secondary-text); display:flex; align-items:center; gap:8px;" class="pw-col" data-pw="${x.temp_password || ''}">
@@ -1228,18 +1232,104 @@
         };
 
         // Other Skeletal logic
+        // Academic Scheduling Logic
         async function loadTim() {
-            const r = await fetch('/api/admin/schedules', { headers: { 'Authorization': `Bearer ${tok}` } });
-            const d = await r.json();
-            const box = document.getElementById('time-grid');
-            box.innerHTML = '';
-            d.forEach(x => {
-                box.innerHTML += `<div class="content-box" style="padding:20px;">
-                    <div style="font-weight:700; font-size:12px; color:var(--accent);">${x.day} | ${x.time_slot}</div>
-                    <h4 style="margin:8px 0; font-size:15px;">${x.subject_name}</h4>
-                    <div style="font-size:11px; color:var(--secondary-text);">${x.room} | ${x.batch}</div>
-                </div>`;
-            });
+            try {
+                const r = await fetch('/api/admin/schedules', { headers: { 'Authorization': `Bearer ${tok}` } });
+                const d = await r.json();
+                const box = document.getElementById('time-grid');
+                box.innerHTML = '';
+                
+                if (d.length === 0) {
+                    box.innerHTML = '<div style="grid-column: 1/-1; padding: 40px; text-align: center; color: var(--secondary-text);">No academic slots allocated yet.</div>';
+                    return;
+                }
+
+                d.forEach(x => {
+                    box.innerHTML += `
+                        <div class="soft-card" style="padding:22px; position:relative; overflow: visible;">
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
+                                <div style="font-weight:800; font-size:11px; color:#C5A880; letter-spacing:0.05em; text-transform:uppercase; display:flex; align-items:center;">
+                                    <i data-lucide="calendar" style="width:12px; height:12px; margin-right:4px;"></i>${x.day}
+                                </div>
+                                <div style="font-weight:700; font-size:10px; color:var(--secondary-text); background:rgba(0,0,0,0.03); padding:4px 10px; border-radius:100px; display:flex; align-items:center;">
+                                    <i data-lucide="clock" style="width:10px; height:10px; margin-right:4px;"></i>${x.time_slot}
+                                </div>
+                            </div>
+                            <h4 style="font-size:16px; font-weight:800; color:var(--primary-text); margin-bottom:15px; border-left: 3px solid #C5A880; padding-left: 12px;">${x.subject_name}</h4>
+                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; border-top:1px solid rgba(0,0,0,0.05); padding-top:15px; margin-top:5px;">
+                                <div style="font-size:11px; color:var(--secondary-text); display:flex; align-items:center;">
+                                    <i data-lucide="map-pin" style="width:11px; height:11px; margin-right:5px; color:#C5A880;"></i><strong>Room:</strong>&nbsp;${x.room || 'N/A'}
+                                </div>
+                                <div style="font-size:11px; color:var(--secondary-text); display:flex; align-items:center;">
+                                    <i data-lucide="users" style="width:11px; height:11px; margin-right:5px; color:#C5A880;"></i><strong>Batch:</strong>&nbsp;${x.batch || 'All'}
+                                </div>
+                            </div>
+                            <div style="margin-top:12px; font-size:11px; color:var(--secondary-text); font-style:italic; border-top: 1px dotted rgba(0,0,0,0.05); padding-top: 8px; display:flex; align-items:center;">
+                                <i data-lucide="user" style="width:11px; height:11px; margin-right:5px; opacity:0.6;"></i>${x.faculty_name || 'Unassigned Faculty'}
+                            </div>
+                            <button title="Delete Slot" style="position:absolute; bottom:20px; right:20px; border:none; background:none; cursor:pointer;" onclick="deleteSch(${x.id})">
+                                <i data-lucide="trash-2" style="width:14px; height:14px; color:#EF4444; opacity:0.3;" class="i-del"></i>
+                            </button>
+                        </div>
+                    `;
+                });
+                lucide.createIcons();
+            } catch (err) {
+                console.error('Error loading schedules:', err);
+                document.getElementById('time-grid').innerHTML = '<div style="color:red; padding:20px;">Failed to load timetable. Check connection.</div>';
+            }
+        }
+
+        document.getElementById('t-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const btn = form.querySelector('button[type="submit"]');
+            const data = Object.fromEntries(new FormData(form));
+
+            btn.disabled = true;
+            btn.textContent = 'Allocating...';
+
+            try {
+                const res = await fetch('/api/admin/schedules', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tok}` },
+                    body: JSON.stringify(data)
+                });
+                if(res.ok) {
+                    tBox('✅ Academic Slot Allocated');
+                    document.getElementById('mod-time').style.display='none';
+                    refreshData('timetable');
+                    form.reset();
+                } else {
+                    tBox('⚠️ Error allocating slot');
+                }
+            } catch (err) {
+                console.error(err);
+                tBox('⚠️ Connection Error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Allocate';
+            }
+        };
+
+        async function deleteSch(id) {
+            if(!confirm('Exclude this slot from the academic schedule?')) return;
+            try {
+                const res = await fetch(`/api/admin/schedules/${id}`, { 
+                    method: 'DELETE', 
+                    headers: { 'Authorization': `Bearer ${tok}` } 
+                });
+                if(res.ok) { 
+                    tBox('🗑 Slot Removed Successfully'); 
+                    refreshData('timetable'); 
+                } else {
+                    tBox('⚠️ Failed to remove slot');
+                }
+            } catch (err) {
+                console.error(err);
+                tBox('⚠️ Connection Error');
+            }
         }
 
         async function loadNot() {
@@ -1260,14 +1350,26 @@
             const d = await r.json();
             const box = document.getElementById('issue-grid');
             box.innerHTML = '';
-            d.forEach(x => {
-                box.innerHTML += `<div class="soft-card" style="padding:25px;">
+            
+            // Only show Pending issues in the actionable grid
+            const pending = d.filter(x => x.status === 'Pending');
+            
+            if(pending.length === 0) {
+                box.innerHTML = '<div style="grid-column: 1/-1; padding: 40px; text-align: center; color: var(--secondary-text);">No pending issues in Resolution Hub.</div>';
+                return;
+            }
+
+            pending.forEach(x => {
+                const isEmergency = x.title.includes('EMERGENCY');
+                box.innerHTML += `
+                <div class="soft-card" style="padding:25px; ${isEmergency ? 'border: 2px solid #EF4444; background: #fffcfc;' : ''}">
                     <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
-                         <span style="font-weight:700; font-size:11px; color:var(--danger-text);">${x.status}</span>
+                         <span style="font-weight:700; font-size:11px; ${isEmergency ? 'color:#EF4444;' : 'color:var(--warning-text);'}">${isEmergency ? '🚨 EMERGENCY' : x.status}</span>
                          <span style="font-size:10px; color:var(--secondary-text)">Reported by ${x.reporter_name}</span>
                     </div>
                     <h4 style="font-weight:700; color:var(--primary-text);">${x.title}</h4>
-                    <button class="btn-primary" style="padding:8px 20px; font-size:10px; margin-top:20px; width:100%;" onclick="resI(${x.id})">Mark Resolved</button>
+                    <p style="font-size:12px; color:var(--secondary-text); margin-top:10px;">${x.description}</p>
+                    <button class="btn-primary" style="padding:8px 20px; font-size:10px; margin-top:20px; width:100%; ${isEmergency ? 'background:#EF4444; color:white;' : ''}" onclick="resI(${x.id})">Mark Resolved</button>
                 </div>`;
             });
         }
@@ -1382,6 +1484,14 @@
             if(ov) { ov.style.display = 'block'; ov.classList.add('active'); }
             if(window.lucide) lucide.createIcons();
             loadStat();
+
+            // REAL-TIME AUTO REFRESH (Polling Engine)
+            setInterval(() => {
+                const activeTab = document.querySelector('.tab-content.active');
+                if(activeTab) {
+                    refreshData(activeTab.id);
+                }
+            }, 5000);
         })();
     </script>
 </body>

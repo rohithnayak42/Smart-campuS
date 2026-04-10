@@ -17,6 +17,9 @@ app.use(express.urlencoded({ extended: true }));
 // Support for Dashboard SPA tabs
 const dashboardTabs = ['admin-dashboard', 'users', 'subjects', 'timetable', 'notices', 'blueprint', 'issues'];
 
+// Staff SPA routes
+const staffTabs = ['staff', 'staff/attendance', 'staff/materials', 'staff/doubts', 'staff/admin-queries', 'staff/tests', 'staff/notices'];
+
 // Static file serving
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -57,10 +60,30 @@ app.get('/', (req, res) => {
 });
 
 // Specific HTML Page Routing
+app.use('/staff', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/staff-dashboard.html'));
+});
+
+app.use('/student', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/student-dashboard.html'));
+});
+
+app.use('/worker', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/worker-dashboard.html'));
+});
+
+app.use('/guard', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/guard-dashboard.html'));
+});
+
+
 app.get('/:page', (req, res) => {
     const page = req.params.page;
     
-    // Redirect dashboard tabs to the main admin-dashboard container
+    // Redirect dashboard tabs to the main admin-dashboard or staff-dashboard container
+    if (page === 'staff' || staffTabs.includes(page)) {
+        return res.sendFile(path.join(__dirname, 'public/staff-dashboard.html'));
+    }
     if (dashboardTabs.includes(page)) {
         return res.sendFile(path.join(__dirname, 'public/admin-dashboard.html'));
     }

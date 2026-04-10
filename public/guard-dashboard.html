@@ -3,128 +3,677 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Campus - Security Guard Dashboard</title>
-    <link rel="stylesheet" href="/css/dashboards.css">
+    <title>Smart Campus | Security Guard Portal</title>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        :root {
+            --bg-color: linear-gradient(to bottom right, #F8FAFC, #EEF2F7);
+            --sidebar-grad: linear-gradient(to bottom, #1E293B, #0F172A);
+            --card-glass: #FFFFFF;
+            --primary-text: #0F172A;
+            --secondary-text: #64748B;
+            --accent: #C5A880; /* Gold */
+            --accent-soft: rgba(197, 168, 128, 0.15);
+            --success: #DCFCE7;
+            --success-text: #166534;
+            --info: #E0F2FE;
+            --info-text: #075985;
+            --warning: #FEF3C7;
+            --warning-text: #92400E;
+            --danger: #FEE2E2;
+            --danger-text: #991B1B;
+            --border: rgba(0,0,0,0.04);
+            --radius-lg: 18px;
+            --shadow-md: 0 8px 25px rgba(0,0,0,0.06);
+            --shadow-hover: 0 15px 35px rgba(0,0,0,0.08);
+            --transition: all 0.3s ease;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+
+        body { 
+            background: var(--bg-color);
+            color: var(--primary-text); 
+            display: flex; 
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar Refinement */
+        .sidebar {
+            width: 280px;
+            background: var(--sidebar-grad);
+            color: white;
+            height: 100vh;
+            position: fixed;
+            left: 0; top: 0;
+            display: flex;
+            flex-direction: column;
+            padding: 35px 22px;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--accent);
+            letter-spacing: -1px;
+            margin-bottom: 50px;
+            padding-left: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-list { list-style: none; flex: 1; }
+        .nav-item { margin-bottom: 8px; }
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 18px;
+            color: #94A3B8;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 500;
+            font-size: 14px;
+            transition: var(--transition);
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+        }
+
+        .nav-link.active {
+            background: var(--accent-soft);
+            color: white;
+            border-left: 3px solid var(--accent);
+            border-radius: 0 12px 12px 0;
+            padding-left: 15px; 
+        }
+
+        /* Header Refinement */
+        header {
+            position: fixed;
+            top: 0; right: 0;
+            width: calc(100% - 280px);
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 15px 40px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            z-index: 900;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .admin-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 6px 16px;
+            background: white;
+            border-radius: 100px;
+            border: 1px solid rgba(0,0,0,0.05);
+            cursor: pointer;
+        }
+
+        .initial-circle {
+            width: 30px; height: 30px;
+            background: #1E293B;
+            color: var(--accent);
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 50%;
+            font-weight: 800; font-size: 13px;
+        }
+
+        /* Main Content */
+        main {
+            margin-left: 280px;
+            padding: 100px 40px 50px;
+            width: calc(100% - 280px);
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.4s ease; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .soft-card {
+            background: var(--card-glass);
+            padding: 28px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border);
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--primary-text);
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            background: white;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        table { width: 100%; border-collapse: collapse; }
+        th {
+            background: #F8FAFC;
+            padding: 15px 20px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--secondary-text);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border);
+        }
+        td {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+            color: var(--primary-text);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), #E6D3A3);
+            color: #1E293B;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(197, 168, 128, 0.4); }
+
+        .btn-secondary {
+            background: white;
+            color: var(--primary-text);
+            border: 1px solid #E2E8F0;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .btn-verify {
+            background: var(--info);
+            color: var(--info-text);
+            border: 1px solid #bae6fd;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-complete {
+            background: var(--success);
+            color: var(--success-text);
+            border: 1px solid #bbf7d0;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--secondary-text); margin-bottom: 8px; }
+        .form-control { width: 100%; padding: 12px 15px; border-radius: 8px; border: 1px solid #E2E8F0; font-size: 14px; }
+
+        .badge-present { background: var(--success); color: var(--success-text); padding: 4px 10px; border-radius: 100px; font-size: 11px; font-weight: 700; }
+        .badge-absent { background: var(--danger); color: var(--danger-text); padding: 4px 10px; border-radius: 100px; font-size: 11px; font-weight: 700; }
+        .badge-pending { background: var(--warning); color: var(--warning-text); padding: 4px 10px; border-radius: 100px; font-size: 11px; font-weight: 700; }
+
+        .toast-box {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #1E293B;
+            color: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            font-weight: 500;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            z-index: 9999;
+        }
+        .toast-box.active { transform: translateY(0); opacity: 1; }
+
+        /* Blueprint Cards */
+        .material-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        .material-card {
+            background: white; border: 1px solid var(--border);
+            padding: 20px; border-radius: 15px;
+            display: flex; align-items: start; gap: 15px;
+            transition: var(--transition);
+        }
+        .material-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+
+        /* Status Panels */
+        .status-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .status-card {
+            background: white;
+            border: 2px solid transparent;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: var(--shadow-md);
+        }
+        .status-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-hover); }
+
+        /* Status variants */
+        .status-duty { color: var(--info-text); border-color: rgba(7, 89, 133, 0.1); }
+        .status-duty.active { border-color: var(--info-text); background: var(--info); }
+        .status-patrol { color: var(--warning-text); border-color: rgba(146, 64, 14, 0.1); }
+        .status-patrol.active { border-color: var(--warning-text); background: var(--warning); }
+        .status-break { color: var(--success-text); border-color: rgba(22, 101, 52, 0.1); }
+        .status-break.active { border-color: var(--success-text); background: var(--success); }
+        .status-off { color: var(--secondary-text); border-color: rgba(100, 116, 139, 0.1); }
+        .status-off.active { border-color: var(--secondary-text); background: rgba(100, 116, 139, 0.1); }
+
+    </style>
 </head>
 <body>
-    <div class="dashboard-container">
-        <aside class="sidebar">
-            <div class="sidebar-header">Guard Portal</div>
-            <nav class="sidebar-nav">
-                <a href="#" class="active">My Duties</a>
-                <a href="#">Monitor Status</a>
-                <a href="#">Campus Map</a>
-                <a href="#">Emergency Contact</a>
-                <a href="#" onclick="logout()" style="margin-top: 50px; color: #f87171;">Logout</a>
-            </nav>
-        </aside>
 
-        <main class="main-content">
-            <h2>Welcome, Security Guard!</h2>
-            
-            <div class="card">
-                <h3>Assigned Patrol Duties</h3>
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Duty Location</th>
-                            <th>Time Slot</th>
-                            <th>Status</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                         <tr>
-                            <td>Main Gate</td>
-                            <td>08:00 AM - 04:00 PM</td>
-                            <td><span class="role-badge" style="background:#FEE2E2; color:#991B1B">Pending</span></td>
-                            <td>
-                                <button class="btn btn-accent" style="padding: 5px 10px; font-size: 0.8rem;">Start Shift</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Hostel Block A</td>
-                            <td>04:00 PM - 12:00 AM</td>
-                            <td><span class="role-badge" style="background:#E5E7EB;">Upcoming</span></td>
-                            <td>
-                                <span class="text-muted">Wait</span>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <i data-lucide="shield-check" style="width: 32px; height: 32px;"></i>
+            <span>Security Portal</span>
+        </div>
+        <ul class="nav-list">
+            <li class="nav-item">
+                <a href="#" class="nav-link active" id="nav-duties" onclick="switchTab('duties'); return false;">
+                    <i data-lucide="clipboard-list"></i><span>My Duties</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link" id="nav-status" onclick="switchTab('status'); return false;">
+                    <i data-lucide="radio"></i><span>Monitor Status</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link" id="nav-map" onclick="switchTab('map'); return false;">
+                    <i data-lucide="map"></i><span>Campus Map</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link" id="nav-notices" onclick="switchTab('notices'); return false;">
+                    <i data-lucide="megaphone"></i><span>Campus Bulletins</span>
+                </a>
+            </li>
+            <li class="nav-item" style="margin-top: 20px;">
+                <a href="#" class="nav-link" id="nav-emergency" onclick="switchTab('emergency'); return false;" style="background: rgba(239, 68, 68, 0.1); color: #EF4444; border-left: 3px solid #EF4444;">
+                    <i data-lucide="alert-triangle"></i><span>Emergency Alert</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <header>
+        <div class="admin-profile">
+            <div class="initial-circle" id="profile-letter">G</div>
+            <div style="text-align: left;">
+                <div style="font-weight: 700; font-size: 13px; color: var(--primary-text);" id="profile-name">Guard Identity</div>
+                <div style="font-size: 11px; color: var(--secondary-text);">Campus Security</div>
             </div>
+        </div>
+        <button class="btn-secondary" style="margin-left: 15px; padding: 8px 20px; font-size: 12px; border:none; background:#FEE2E2; color:#991B1B;" onclick="logout()">Logout</button>
+    </header>
 
-            <div class="card" style="border-left: 4px solid #EF4444;">
-                <h3>Emergency Alert to Admin</h3>
-                <form>
-                    <div class="form-group">
-                        <textarea class="form-control" rows="2" placeholder="Describe the incident..."></textarea>
+    <main>
+        <!-- My Duties -->
+        <div id="duties" class="tab-content active">
+            <h2 class="section-title">Assigned Security Duties</h2>
+            <div class="soft-card">
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Directive / Details</th>
+                                <th>Location Context</th>
+                                <th>Assignment Status</th>
+                                <th style="text-align:right;">Action Control</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tasks-rows">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monitor Status -->
+        <div id="status" class="tab-content">
+            <h2 class="section-title">Broadcast Live Operations Status</h2>
+            <p style="color:var(--secondary-text); margin-bottom:25px;">Select your current operational state to broadcast live to the Administration dashboard.</p>
+            
+            <div class="status-panel">
+                <div class="status-card status-duty" id="st-on-duty" onclick="updateGuardStatus('On Duty', this)">
+                    <i data-lucide="shield" style="width:40px; height:40px; margin-bottom:15px;"></i>
+                    <h3 style="font-weight:700; font-size:16px;">On Duty</h3>
+                    <p style="font-size:12px; margin-top:5px; opacity:0.8;">Stationed at designated post</p>
+                </div>
+                
+                <div class="status-card status-patrol" id="st-patrol" onclick="updateGuardStatus('Patrol', this)">
+                    <i data-lucide="footprints" style="width:40px; height:40px; margin-bottom:15px;"></i>
+                    <h3 style="font-weight:700; font-size:16px;">Patrol</h3>
+                    <p style="font-size:12px; margin-top:5px; opacity:0.8;">Actively moving across campus</p>
+                </div>
+
+                <div class="status-card status-break" id="st-break" onclick="updateGuardStatus('Break', this)">
+                    <i data-lucide="coffee" style="width:40px; height:40px; margin-bottom:15px;"></i>
+                    <h3 style="font-weight:700; font-size:16px;">Break</h3>
+                    <p style="font-size:12px; margin-top:5px; opacity:0.8;">Temporarily unavailable</p>
+                </div>
+
+                <div class="status-card status-off" id="st-off-duty" onclick="updateGuardStatus('Off Duty', this)">
+                    <i data-lucide="power" style="width:40px; height:40px; margin-bottom:15px;"></i>
+                    <h3 style="font-weight:700; font-size:16px;">Off Duty</h3>
+                    <p style="font-size:12px; margin-top:5px; opacity:0.8;">Shift ended</p>
+                </div>
+            </div>
+            
+            <div style="margin-top: 30px; padding: 20px; background: rgba(255,255,255,0.7); border-radius: 12px; border: 1px solid var(--border); display: flex; align-items: center; gap: 15px;">
+                <i data-lucide="activity" style="color: var(--accent);"></i>
+                <div style="font-size: 14px; color: var(--secondary-text);">Last synchronised: <span id="last-sync" style="font-weight:600; color:var(--primary-text);">Just now</span></div>
+            </div>
+        </div>
+
+        <!-- Campus Map -->
+        <div id="map" class="tab-content">
+            <h2 class="section-title">Campus Blueprints & Layouts</h2>
+            <div class="material-grid" id="map-container">
+                <!-- Dynamically populated -->
+            </div>
+        </div>
+
+        <!-- Campus Bulletins -->
+        <div id="notices" class="tab-content">
+            <h2 class="section-title">Campus Bulletins (Admin)</h2>
+            <div id="notices-container" style="display:flex; flex-direction:column; gap:15px;">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+        
+        <!-- Emergency Alert -->
+        <div id="emergency" class="tab-content">
+            <div class="soft-card" style="border: 2px solid #FEE2E2; background: #fffcfc;">
+                <div style="display:flex; align-items:center; gap:15px; margin-bottom:20px;">
+                    <div style="background: #EF4444; width:45px; height:45px; border-radius:50%; display:flex; align-items:center; justify-content:center;">
+                        <i data-lucide="alert-triangle" style="color:white; width:22px; height:22px;"></i>
                     </div>
-                    <button class="btn" style="background: #EF4444;">Send Immediate Alert</button>
+                    <div>
+                        <h2 style="font-size: 22px; font-weight: 800; color: #991B1B;">Dispatch Emergency Alert</h2>
+                        <p style="color: #EF4444; font-size:13px; font-weight:500;">This will bypass normal queues and immediately flag Admin.</p>
+                    </div>
+                </div>
+                
+                <form id="emergency-form">
+                    <div class="form-group">
+                        <label style="color:#991B1B;">Emergency Situation / Code</label>
+                        <input type="text" class="form-control" id="emergency-title" style="border-color:#FCA5A5; background:white;" required placeholder="e.g., CODE RED: Unauthorized Access in Sector 4">
+                    </div>
+                    <div class="form-group">
+                        <label style="color:#991B1B;">Incident Details</label>
+                        <textarea class="form-control" id="emergency-desc" rows="4" style="border-color:#FCA5A5; background:white;" required placeholder="Provide location, suspect details, or immediate requirements..."></textarea>
+                    </div>
+                    <!-- Submitting to standard resolution hub but prepending EMERGENCY tag -->
+                    <button type="submit" class="btn-primary" style="background: #EF4444; color: white; border: none; width:100%; padding: 15px; font-size:16px;">Trigger System Alert</button>
                 </form>
             </div>
-        </main>
-    </div>
+        </div>
 
-    <div id="logout-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; z-index:1000;">
-        <div style="background:white; padding:30px; border-radius:15px; width:350px; text-align:center;">
-            <h3>Ready to Logout?</h3>
-            <p style="margin:15px 0;">Are you sure you want to exit your portal session?</p>
-            <div style="display:flex; gap:10px; justify-content:center;">
-                <button onclick="confirmLogout()" style="background:#f87171; color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer;">Yes, Logout</button>
-                <button onclick="closeLogout()" style="background:#e5e7eb; padding:10px 20px; border-radius:8px; cursor:pointer; border:none;">Cancel</button>
+    </main>
+
+    <!-- Logout Modal -->
+    <div id="logout-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; z-index:9999; backdrop-filter: blur(5px);">
+        <div style="background:white; padding:35px; border-radius:24px; width:380px; text-align:center; box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
+            <div style="width:60px; height:60px; background:#FEE2E2; border-radius:50%; display:flex; align-items:center; justify-content:center; margin: 0 auto 20px;">
+                <i data-lucide="log-out" style="color:#991B1B; width:28px; height:28px;"></i>
+            </div>
+            <h3 style="font-weight:700; font-size:20px; color:#0F172A;">Ready to Logout?</h3>
+            <p style="margin:15px 0 25px; color:#64748B; font-size:14px; line-height:1.6;">Are you sure you want to securely end your current operations session?</p>
+            <div style="display:flex; gap:15px; justify-content:center;">
+                <button onclick="closeLogout()" class="btn-secondary" style="flex:1;">Cancel</button>
+                <button onclick="confirmLogout()" class="btn-primary" style="flex:1; background:#EF4444; color:white;">Yes, Logout</button>
             </div>
         </div>
     </div>
 
+    <div id="t-bin" class="toast-box">System confirmed status.</div>
+
     <script>
-        const token = localStorage.getItem('sc_token');
-        if(!token || localStorage.getItem('sc_role') !== 'guard') {
-            window.location.href = '/auth';
+        const tok = localStorage.getItem('sc_token');
+        const storedRole = (localStorage.getItem('sc_role') || '').toLowerCase();
+        if(!tok || storedRole !== 'guard') window.location.href = '/auth';
+
+        function tBox(msg) {
+            const t = document.getElementById('t-bin');
+            t.textContent = msg;
+            t.classList.add('active');
+            setTimeout(() => t.classList.remove('active'), 3000);
         }
 
-        async function fetchDuties() {
-            const res = await fetch('/api/stakeholder/tasks', { headers: { 'Authorization': `Bearer ${token}` } });
-            const data = await res.json();
-            const body = document.querySelector('tbody');
-            body.innerHTML = data.map(x => `
-                <tr>
-                    <td>${x.title}</td>
-                    <td>${x.description}</td>
-                    <td><span class="role-badge" style="background:${x.status === 'Completed' ? '#DCFCE7' : '#FEE2E2'}; color:${x.status === 'Completed' ? '#166534' : '#991B1B'}">${x.status}</span></td>
-                    <td>
-                        ${x.status === 'Pending' ? `<button class="btn btn-accent" style="padding: 5px 10px; font-size: 0.8rem;" onclick="updateTask(${x.id}, 'Completed')">Mark Completed</button>` : 'Check Out'}
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        async function updateTask(id, status) {
-            await fetch(`/api/stakeholder/tasks/${id}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ status })
+        // SPA Router logic
+        function switchTab(id) {
+            document.querySelectorAll('.tab-content').forEach(function(t) {
+                t.style.display = 'none';
+                t.classList.remove('active');
             });
-            fetchDuties();
+            var target = document.getElementById(id);
+            if (!target) target = document.getElementById('duties');
+            target.style.display = 'block';
+            target.classList.add('active');
+
+            document.querySelectorAll('.nav-link').forEach(function(l) { l.classList.remove('active'); });
+            var navLink = document.getElementById('nav-' + id);
+            if (navLink) navLink.classList.add('active');
+
+            // Hook data loading
+            if (id === 'duties') loadTasks();
+            if (id === 'map') loadBlueprints();
+            if (id === 'notices') loadNotices();
+            
+            // For status, visually load status from the server 
+            // In a real robust system we'd fetch profile.current_status, here we'll assume default until set.
         }
 
-        document.querySelector('form').onsubmit = async (e) => {
+        // Feature Loaders
+        async function loadProfile() {
+            try {
+                const res = await fetch('/api/stakeholder/profile', { headers: { 'Authorization': `Bearer ${tok}` } });
+                const data = await res.json();
+                document.getElementById('profile-letter').textContent = (data.name || 'G').charAt(0).toUpperCase();
+                document.getElementById('profile-name').textContent = data.name || 'Guard Account';
+                
+                // Set the active status card based on backend if we updated the profile endpoint
+                // Since profile doesn't return current_status right now, we keep it as Off Duty default unless updated locally
+            } catch(e) {}
+        }
+
+        async function loadTasks() {
+            try {
+                const res = await fetch('/api/stakeholder/tasks', { headers: { 'Authorization': `Bearer ${tok}` } });
+                const data = await res.json();
+                const body = document.getElementById('tasks-rows');
+                if(data.length === 0) {
+                     body.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--secondary-text);">No operational directives assigned</td></tr>`;
+                     return;
+                }
+
+                body.innerHTML = data.map(x => {
+                    let st = 'badge-pending';
+                    if(x.status === 'In Progress') st = 'badge-present'; // using success palette playfully
+                    if(x.status === 'Completed') st = 'badge-present';
+                    
+                    return `
+                    <tr>
+                        <td style="font-weight:600; color:var(--primary-text);">${x.title}</td>
+                        <td style="color:var(--secondary-text);">${x.description}</td>
+                        <td><span class="${st}">${x.status === 'In Progress' ? 'Active' : x.status}</span></td>
+                        <td style="text-align:right;">
+                            ${x.status === 'Pending' ? `<button class="btn-verify" onclick="changeTaskStatus(${x.id}, 'In Progress')">Start Shift / Active</button>` : ''}
+                            ${x.status === 'In Progress' ? `<button class="btn-complete" onclick="changeTaskStatus(${x.id}, 'Completed')">End / Complete</button>` : ''}
+                            ${x.status === 'Completed' ? `<span style="font-size:12px; color:var(--secondary-text); font-weight:600;"><i data-lucide="check" style="width:14px; position:relative; top:3px;"></i> Verified</span>` : ''}
+                        </td>
+                    </tr>
+                `}).join('');
+                if (window.lucide) lucide.createIcons();
+            } catch(e) { console.error(e); }
+        }
+
+        async function changeTaskStatus(id, newStatus) {
+            try {
+                await fetch(`/api/stakeholder/tasks/${id}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tok}` },
+                    body: JSON.stringify({ status: newStatus })
+                });
+                loadTasks();
+            } catch(e) {}
+        }
+
+        async function loadBlueprints() {
+            try {
+                const res = await fetch('/api/stakeholder/blueprints', { headers: { 'Authorization': `Bearer ${tok}` } });
+                const data = await res.json();
+                const box = document.getElementById('map-container');
+                if(data.length === 0) {
+                    box.innerHTML = '<p style="color:var(--secondary-text); font-size:14px;">No maps available.</p>'; return;
+                }
+                box.innerHTML = data.map(x => `
+                    <div class="material-card">
+                        <div style="background:var(--info); padding:12px; border-radius:12px; color:var(--info-text);">
+                            <i data-lucide="map" style="width:24px; height:24px;"></i>
+                        </div>
+                        <div>
+                            <div style="font-weight:700; font-size:14px; margin-bottom:5px; color:var(--primary-text);">${x.original_name}</div>
+                            <div style="font-size:12px; color:var(--secondary-text); margin-bottom:12px;">Blueprints Hub</div>
+                            <a href="/uploads/blueprints/${x.stored_name}" target="_blank" class="btn-secondary" style="font-size:11px; padding: 6px 12px;">View Map</a>
+                        </div>
+                    </div>
+                `).join('');
+                if (window.lucide) lucide.createIcons();
+            } catch(e) {}
+        }
+
+        // Live Guard Status
+        async function updateGuardStatus(statusText, element) {
+            document.querySelectorAll('.status-card').forEach(c => c.classList.remove('active'));
+            element.classList.add('active');
+            
+            try {
+                const res = await fetch('/api/stakeholder/guard/status', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tok}` },
+                    body: JSON.stringify({ status: statusText })
+                });
+                if(res.ok) {
+                    tBox(`Broadcasted: ${statusText}`);
+                    document.getElementById('last-sync').textContent = new Date().toLocaleTimeString();
+                } else {
+                    tBox(`Error broadcasting status`);
+                }
+            } catch (error) {
+                tBox(`Error communicating with Admin relay`);
+            }
+        }
+
+        // Emergency Form
+        document.getElementById('emergency-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const description = e.target.querySelector('textarea').value;
-            await fetch('/api/stakeholder/issues', {
+            const btn = e.target.querySelector('button');
+            btn.textContent = "Broadcasting Alert...";
+            const res = await fetch('/api/stakeholder/issues', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ title: 'EMERGENCY ALERT', description })
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tok}` },
+                body: JSON.stringify({ 
+                    title: "🚨 EMERGENCY: " + document.getElementById('emergency-title').value, 
+                    description: document.getElementById('emergency-desc').value 
+                })
             });
-            alert('Emergency alert sent to Admin!');
-            e.target.reset();
-        };
+            if(res.ok) { tBox("Alert successfully wired to Admin"); e.target.reset(); }
+            btn.textContent = "Trigger System Alert";
+        });
 
+        // Logout
         function logout() { document.getElementById('logout-modal').style.display='flex'; }
         function closeLogout() { document.getElementById('logout-modal').style.display='none'; }
         function confirmLogout() { localStorage.clear(); window.location.href='/auth'; }
 
-        fetchDuties();
+        async function loadNotices() {
+            try {
+                const res = await fetch('/api/stakeholder/notices', { headers: { 'Authorization': `Bearer ${tok}` } });
+                const data = await res.json();
+                const box = document.getElementById('notices-container');
+                if(data.length === 0) {
+                    box.innerHTML = '<p style="color:var(--secondary-text); font-size:14px;">No active notices.</p>'; return;
+                }
+                box.innerHTML = data.map(x => `
+                    <div class="soft-card" style="margin-bottom:0; padding:20px;">
+                        <h4 style="color:var(--primary-text); font-weight:700;">${x.title}</h4>
+                        <p style="margin-top:10px; color:var(--secondary-text); font-size:13px; line-height:1.5;">${x.message}</p>
+                        <div style="margin-top:10px; font-size:10px; color:var(--accent); font-weight:700;">ADMIN NOTICE</div>
+                    </div>
+                `).join('');
+            } catch(e) {}
+        }
+
+        async function refreshData(id) {
+            if (id === 'duties') loadTasks();
+            if (id === 'map') loadBlueprints();
+            if (id === 'notices') loadNotices();
+        }
+
+        // Start
+        (function init() {
+            document.querySelectorAll('.tab-content').forEach(function(t) {
+                t.style.display = 'none';
+                t.classList.remove('active');
+            });
+            var ov = document.getElementById('duties');
+            if(ov) { ov.style.display = 'block'; ov.classList.add('active'); }
+            if(window.lucide) lucide.createIcons();
+            
+            loadProfile();
+            loadTasks();
+
+            // REAL-TIME AUTO REFRESH (Polling Engine)
+            setInterval(() => {
+                const activeTab = document.querySelector('.tab-content.active');
+                if(activeTab) refreshData(activeTab.id);
+            }, 5000);
+        })();
+
     </script>
 </body>
 </html>

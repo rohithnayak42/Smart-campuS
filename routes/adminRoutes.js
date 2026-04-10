@@ -5,7 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const { 
     addUser, getUsers, deleteUser, updateUser, getStats, getIssues, updateIssueStatus, 
-    addSubject, getSubjects, updateSubject, deleteSubject, addSchedule, getSchedules, 
+    addSubject, getSubjects, updateSubject, deleteSubject, addSchedule, getSchedules, deleteSchedule,
     addNotice, getNotices, deleteNotice, resetPassword,
     uploadBlueprint, getBlueprints, deleteBlueprint
 } = require('../controllers/adminController');
@@ -55,6 +55,7 @@ router.delete('/subjects/:id', adminMiddleware, deleteSubject);
 // Schedules
 router.post('/schedules', adminMiddleware, addSchedule);
 router.get('/schedules', adminMiddleware, getSchedules);
+router.delete('/schedules/:id', adminMiddleware, deleteSchedule);
 
 // Notices
 router.post('/notices', adminMiddleware, addNotice);

@@ -25,6 +25,9 @@ const createUserTable = async () => {
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='temp_password') THEN
             ALTER TABLE users ADD COLUMN temp_password VARCHAR(255);
         END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='current_status') THEN
+            ALTER TABLE users ADD COLUMN current_status VARCHAR(50) DEFAULT 'Off Duty';
+        END IF;
 
         -- Normalize roles
         UPDATE users SET role = 'staff' WHERE role ILIKE 'faculty' OR role ILIKE 'professor';
@@ -154,6 +157,28 @@ const createUserTable = async () => {
                 original_name VARCHAR(255),
                 stored_name VARCHAR(255),
                 file_type VARCHAR(50),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE TABLE IF NOT EXISTS student_attendance (
+                id SERIAL PRIMARY KEY,
+                schedule_id INTEGER,
+                student_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                student_name VARCHAR(100),
+                subject VARCHAR(100),
+                batch VARCHAR(50),
+                date DATE DEFAULT CURRENT_DATE,
+                status VARCHAR(20) DEFAULT 'Absent',
+                marked_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE TABLE IF NOT EXISTS faculty_tests (
+                id SERIAL PRIMARY KEY,
+                faculty_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                title VARCHAR(200) NOT NULL,
+                subject VARCHAR(100) NOT NULL,
+                description TEXT,
+                file_url VARCHAR(255),
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         `);

@@ -281,6 +281,93 @@ const getMaterials = async (req, res) => {
     }
 };
 
+const getStudentsByBatch = async (req, res) => {
+    try {
+        const { batch } = req.query;
+        let query = "SELECT id, name, email as login_email, real_email, batch FROM users WHERE role = 'student'";
+        const params = [];
+        if (batch) {
+            query += " AND batch = $1";
+            params.push(batch);
+        }
+        const { rows } = await db.query(query, params);
+        res.json(rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server error fetching students' });
+    }
+};
+
+const markStudentAttendance = async (req, res) => {
+    try {
+        const { schedule_id, subject, batch, attendanceData } = req.body;
+        // attendanceData is an array of { student_id, student_name, status }
+        
+        for (const record of attendanceData) {
+            await db.query(
+                `INSERT INTO student_attendance (schedule_id, student_id, student_name, subject, batch, status, marked_by)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+                [schedule_id, record.student_id, record.student_name, subject, batch, record.status, req.user.id]
+            );
+        }
+        res.json({ success: true, message: 'Student attendance recorded' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server error marking student attendance' });
+    }
+};
+
+const conductTest = async (req, res) => {
+    try {
+        const { title, subject, description } = req.body;
+        const fileUrl = req.file ? `/uploads/materials/${req.file.filename}` : null;
+
+        const { rows } = await db.query(
+            'INSERT INTO faculty_tests (faculty_id, title, subject, description, file_url) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+            [req.user.id, title, subject, description, fileUrl]
+        );
+        res.status(201).json(rows[0]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server error creating test' });
+    }
+};
+
+
+const getMyAttendance = async (req, res) => {
+    try {
+        const { rows } = await db.query(
+            'SELECT subject, status, date FROM student_attendance WHERE student_id = $1 ORDER BY date DESC, created_at DESC', 
+            [req.user.id]
+        );
+        res.json(rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server error fetching attendance' });
+    }
+};
+
+const getSharedBlueprints = async (req, res) => {
+    try {
+        const { rows } = await db.query('SELECT * FROM campus_blueprints ORDER BY created_at DESC');
+        res.json(rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
+const updateMyStatus = async (req, res) => {
+    try {
+        const { status } = req.body;
+        await db.query('UPDATE users SET current_status = $1 WHERE id = $2', [status, req.user.id]);
+        res.json({ message: 'Status updated' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server error updating status' });
+    }
+};
+
 module.exports = {
     getProfile,
     getSharedSubjects,
@@ -298,5 +385,11 @@ module.exports = {
     reportIssue,
     getMyIssues,
     uploadMaterial,
-    getMaterials
+    getMaterials,
+    getStudentsByBatch,
+    markStudentAttendance,
+    conductTest,
+    getMyAttendance,
+    getSharedBlueprints,
+    updateMyStatus
 };

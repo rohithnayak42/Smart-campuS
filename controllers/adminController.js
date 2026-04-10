@@ -15,7 +15,11 @@ const addUser = async (req, res) => {
         }
 
         const VALID_ROLES = ['admin', 'staff', 'student', 'worker', 'guard'];
-        const normalizedRole = role.toLowerCase();
+        let normalizedRole = role.toLowerCase().trim();
+        
+        // Normalize common alias
+        if (normalizedRole === 'faculty') normalizedRole = 'staff';
+
         if (!VALID_ROLES.includes(normalizedRole)) {
             return res.status(400).json({ message: `Invalid role: ${role}. Must be one of ${VALID_ROLES.join(', ')}` });
         }
@@ -84,26 +88,115 @@ const updateUser = async (req, res) => {
         const { id } = req.params;
         const { name, loginEmail, realEmail, role } = req.body;
         
+        console.log(`[DEBUG] Received UPDATE request for User ID: ${id}`);
+        console.log(`[DEBUG] Incoming Data:`, { name, loginEmail, realEmail, role });
+
+        // Fetch current user details for absolute comparison
+        const { rows: currentUserRes } = await db.query('SELECT name, email, role, real_email FROM users WHERE id = $1', [id]);
+        if (currentUserRes.length === 0) {
+            console.error(`[DEBUG] Update aborted: User ${id} not found.`);
+            return res.status(404).json({ message: 'User not found' });
+        }
+        const oldUser = currentUserRes[0];
+
+        // Normalization Helper
+        const norm = (val) => (val || '').toString().toLowerCase().trim();
+
+        // Standardize Roles
         const VALID_ROLES = ['admin', 'staff', 'student', 'worker', 'guard'];
-        const normalizedRole = role ? role.toLowerCase() : null;
-        if (normalizedRole && !VALID_ROLES.includes(normalizedRole)) {
+        let normalizedRole = role ? role.toLowerCase().trim() : oldUser.role;
+        if (normalizedRole === 'faculty') normalizedRole = 'staff';
+
+        if (!VALID_ROLES.includes(normalizedRole)) {
+            console.error(`[DEBUG] Invalid role '${role}' rejected.`);
             return res.status(400).json({ message: `Invalid role: ${role}` });
         }
 
-        // Ensure no other user has this login email
-        const { rows: existingUser } = await db.query('SELECT id FROM users WHERE email = $1 AND id != $2', [loginEmail, id]);
-        if (existingUser.length > 0) {
-            return res.status(400).json({ message: 'Login Email already in use by another user' });
+        // Email Conflict Check
+        if (loginEmail && norm(loginEmail) !== norm(oldUser.email)) {
+            const { rows: existingUser } = await db.query('SELECT id FROM users WHERE email = $1 AND id != $2', [loginEmail, id]);
+            if (existingUser.length > 0) {
+                return res.status(400).json({ message: 'Login Email already in use by another user' });
+            }
         }
 
+        const finalName = name || oldUser.name;
+        const finalLoginEmail = loginEmail || oldUser.email;
+        const finalRealEmail = realEmail || oldUser.real_email;
+
+        // DB Update
         await db.query(
             'UPDATE users SET name = $1, email = $2, real_email = $3, role = $4, updated_at = CURRENT_TIMESTAMP WHERE id = $5',
-            [name, loginEmail, realEmail, normalizedRole, id]
+            [finalName, finalLoginEmail, finalRealEmail, normalizedRole, id]
         );
+        console.log(`[DEBUG] DB Update Success for ${id}`);
 
-        res.json({ message: 'User updated successfully' });
+        // CHANGE DETECTION (Normalized)
+        const nameChanged = norm(finalName) !== norm(oldUser.name);
+        const roleChanged = norm(normalizedRole) !== norm(oldUser.role);
+        const emailChanged = norm(finalLoginEmail) !== norm(oldUser.email);
+        const realEmailChanged = norm(finalRealEmail) !== norm(oldUser.real_email);
+
+        console.log(`[DEBUG] Comparison Results:`, { nameChanged, roleChanged, emailChanged, realEmailChanged });
+
+        if (nameChanged || roleChanged || emailChanged || realEmailChanged) {
+            console.log(`[DEBUG] Change detected. Preparing email to: ${finalRealEmail}`);
+            
+            const emailSubject = 'Account Updated';
+            const emailBody = `Hello ${finalName},\n\nYour account details have been updated by the Admin.\n\nUpdated Information:\n\nName: ${finalName}\nRole: ${normalizedRole}\nEmail: ${finalLoginEmail}\n\nIf your role has changed, your dashboard access will also change accordingly.\n\nPlease login again to access your updated portal.\n\nIf you did not expect this change, contact Admin immediately.\n\nRegards,\nSmart Campus Team`;
+            const emailHtml = `
+                <div style="font-family: 'Inter', system-ui, Arial, sans-serif; max-width: 600px; padding: 40px; border: 1px solid #f0f0f0; border-radius: 20px; color: #1f2937;">
+                    <div style="text-align: center; margin-bottom: 30px;">
+                        <h1 style="font-size: 24px; font-weight: 800; color: #C5A880; margin: 0;">Smart Campus</h1>
+                        <p style="color: #64748b; font-size: 14px; margin-top: 5px;">Secure Identity Update</p>
+                    </div>
+
+                    <p style="font-size: 16px; margin-bottom: 20px;">Hello <strong>${finalName}</strong>,</p>
+                    <p style="font-size: 15px; color: #4b5563; line-height: 1.6;">Your professional account profile has been updated by the administrator. Please review the modified credentials below.</p>
+                    
+                    <div style="background: #f8fafc; padding: 25px; border-radius: 12px; margin: 30px 0; border: 1px solid #e2e8f0;">
+                        <div style="margin-bottom: 15px;">
+                            <label style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;">New Name</label>
+                            <p style="margin: 4px 0 0; font-weight: 600;">${finalName}</p>
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;">Assigned Role</label>
+                            <p style="margin: 4px 0 0; font-weight: 600; text-transform: capitalize;">${normalizedRole}</p>
+                        </div>
+                        <div>
+                            <label style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;">System Login Email</label>
+                            <p style="margin: 4px 0 0; font-weight: 600;">${finalLoginEmail}</p>
+                        </div>
+                    </div>
+
+                    <div style="background: #fffbeb; border: 1px solid #fef3c7; border-radius: 8px; padding: 15px; margin-bottom: 30px;">
+                        <p style="margin: 0; color: #92400e; font-size: 13px; font-weight: 500;">Role permission changes are effective immediately. Please re-authenticate your session to access your new portal features.</p>
+                    </div>
+
+                    <p style="font-size: 12px; color: #9ca3af; text-align: center;">If you did not authorize this change, please alert the security team immediately.</p>
+                    <div style="text-align: center; margin-top: 30px; color: #64748b; font-size: 13px; font-weight: 600;">
+                        Smart Campus Support
+                    </div>
+                </div>
+            `;
+
+            try {
+                await sendEmail(finalRealEmail, emailSubject, emailBody, emailHtml);
+                console.log(`[DEBUG] Email Dispatch Successful to ${finalRealEmail}`);
+            } catch (mailErr) {
+                console.error(`[DEBUG] Fatal Mailer Error: ${mailErr.message}`);
+            }
+        } else {
+            console.log(`[DEBUG] Skipping notification: No detectable changes found between old/new state.`);
+        }
+
+        res.json({ 
+            message: 'User updated successfully', 
+            details: { name: finalName, role: normalizedRole, email: finalLoginEmail }
+        });
+
     } catch (error) {
-        console.error('Error updating user:', error);
+        console.error('[DEBUG] CRITICAL EXCEPTION:', error);
         res.status(500).json({ error: 'Server error during user update' });
     }
 };
@@ -111,7 +204,7 @@ const updateUser = async (req, res) => {
 const getUsers = async (req, res) => {
     try {
         const { role } = req.query;
-        let query = 'SELECT id, name, email as login_email, real_email, role, is_first_login, temp_password, created_at FROM users';
+        let query = 'SELECT id, name, email as login_email, real_email, role, is_first_login, temp_password, current_status, created_at FROM users';
         let params = [];
         
         if (role && role !== 'All') {
@@ -147,6 +240,7 @@ const getStats = async (req, res) => {
         const resolvedIssueStats = await db.query('SELECT count(*) FROM campus_issues WHERE status = \'Resolved\'');
         const subjectStats = await db.query('SELECT count(*) FROM subjects');
         const noticeStats = await db.query('SELECT count(*) FROM campus_notices');
+        const scheduleStats = await db.query('SELECT count(*) FROM timetable_schedules');
         
         const stats = {
             roles: userStats.rows,
@@ -154,6 +248,7 @@ const getStats = async (req, res) => {
             resolvedIssues: resolvedIssueStats.rows[0].count,
             totalSubjects: subjectStats.rows[0].count,
             totalNotices: noticeStats.rows[0].count,
+            totalSchedules: scheduleStats.rows[0].count,
             totalUsers: userStats.rows.reduce((acc, curr) => acc + parseInt(curr.count), 0)
         };
         res.json(stats);
@@ -278,11 +373,24 @@ const addSchedule = async (req, res) => {
 
 const getSchedules = async (req, res) => {
     try {
-        const { rows } = await db.query('SELECT * FROM timetable_schedules ORDER BY day, time_slot ASC');
+        const { rows } = await db.query(`
+            SELECT * FROM timetable_schedules 
+            ORDER BY 
+                CASE day 
+                    WHEN 'Monday' THEN 1 
+                    WHEN 'Tuesday' THEN 2 
+                    WHEN 'Wednesday' THEN 3 
+                    WHEN 'Thursday' THEN 4 
+                    WHEN 'Friday' THEN 5 
+                    WHEN 'Saturday' THEN 6 
+                    WHEN 'Sunday' THEN 7 
+                END, 
+                time_slot ASC
+        `);
         res.json(rows);
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Server error' });
+        console.error('Error fetching schedules:', error);
+        res.status(500).json({ error: 'Server error while fetching timetable' });
     }
 };
 
@@ -400,9 +508,20 @@ const deleteBlueprint = async (req, res) => {
     }
 };
 
+const deleteSchedule = async (req, res) => {
+    try {
+        const { id } = req.params;
+        await db.query('DELETE FROM timetable_schedules WHERE id = $1', [id]);
+        res.json({ message: 'Schedule deleted successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server error while deleting schedule' });
+    }
+};
+
 module.exports = { 
     addUser, getUsers, deleteUser, updateUser, getStats, getIssues, updateIssueStatus, 
-    addSubject, getSubjects, updateSubject, deleteSubject, addSchedule, getSchedules, 
+    addSubject, getSubjects, updateSubject, deleteSubject, addSchedule, getSchedules, deleteSchedule,
     addNotice, getNotices, deleteNotice, resetPassword,
     uploadBlueprint, getBlueprints, deleteBlueprint
 };

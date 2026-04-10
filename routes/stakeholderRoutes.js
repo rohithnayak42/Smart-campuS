@@ -17,7 +17,13 @@ const {
     reportIssue,
     getMyIssues,
     uploadMaterial,
-    getMaterials
+    getMaterials,
+    getStudentsByBatch,
+    markStudentAttendance,
+    conductTest,
+    getMyAttendance,
+    getSharedBlueprints,
+    updateMyStatus
 } = require('../controllers/stakeholderController');
 const { authMiddleware } = require('../middlewares/authMiddleware');
 const multer = require('multer');
@@ -45,19 +51,26 @@ router.get('/subjects', getSharedSubjects);
 
 // Student
 router.get('/student/timetable', getStudentTimetable);
+router.get('/student/attendance', getMyAttendance);
 router.post('/student/doubts', submitDoubt);
 router.get('/student/doubts', getStudentDoubts);
 
 // Faculty
 router.get('/faculty/schedule', getFacultySchedule);
-router.post('/faculty/attendance', markAttendance);
+router.post('/faculty/attendance', markAttendance); // keeps the existing schedule attendance
+router.post('/faculty/student-attendance', markStudentAttendance);
+router.post('/faculty/tests', upload.single('file'), conductTest);
 router.post('/faculty/notices', postFacultyNotice);
 router.get('/faculty/doubts', getFacultyDoubts);
 router.patch('/faculty/doubts/:id', replyToDoubt);
 
+// Common Queries / Lists
+router.get('/students', getStudentsByBatch);
+
 // Guards & Workers (Tasks)
 router.get('/tasks', getMyTasks);
 router.patch('/tasks/:id', updateTaskStatus);
+router.patch('/guard/status', updateMyStatus);
 
 // Common
 router.get('/notices', getMyNotices);
@@ -65,5 +78,6 @@ router.post('/issues', reportIssue);
 router.get('/issues', getMyIssues);
 router.post('/materials', upload.single('file'), uploadMaterial);
 router.get('/materials', getMaterials);
+router.get('/blueprints', getSharedBlueprints);
 
 module.exports = router;

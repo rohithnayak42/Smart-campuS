@@ -15,7 +15,7 @@ const authMiddleware = (req, res, next) => {
 
 const adminMiddleware = (req, res, next) => {
     authMiddleware(req, res, () => {
-        if (req.user.role !== 'Admin') {
+        if (!req.user || !req.user.role || req.user.role.toLowerCase() !== 'admin') {
             return res.status(403).json({ message: 'Access denied. Requires Admin role.' });
         }
         next();
