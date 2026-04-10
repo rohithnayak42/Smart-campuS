@@ -3,7 +3,7 @@
  * This file connects Vercel's root directory search to your consolidated
  * backend inside the /api folder.
  */
-const app = require('./api/app');
+const app = require('./app');
 
 // Local Development Support: If run directly, start the server
 if (require.main === module) {

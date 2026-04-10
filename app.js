@@ -21,8 +21,8 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Path normalization for serverless environments (Root-relative)
-const PUBLIC_DIR = path.resolve(__dirname, '..');
+// Path normalization for serverless environments (Root-Standard)
+const PUBLIC_DIR = path.resolve(__dirname);
 const UPLOADS_DIR = path.resolve(__dirname, 'uploads');
 
 // Support for Dashboard SPA tabs
