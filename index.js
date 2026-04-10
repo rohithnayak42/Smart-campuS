@@ -11,8 +11,28 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static files from the 'public' directory
+// Handle standard dashboard routes (SPA entry point)
+const dashboardRoutes = ['admin-dashboard', 'users', 'subjects', 'timetable', 'notices', 'blueprint', 'issues'];
+
+app.get('/:page', (req, res, next) => {
+    const page = req.params.page;
+    if (page.startsWith('api')) return next();
+    
+    if (dashboardRoutes.includes(page)) {
+        console.log(`[Router] Serving React Dashboard SPA for: /${page}`);
+        return res.sendFile(path.join(__dirname, 'react-dist', 'index.html'), (err) => {
+            if (err) {
+                console.error(`[Router Error] Failed to send React build for /${page}:`, err.message);
+                res.status(500).send("Dashboard SPA load failure. Please contact administrator.");
+            }
+        });
+    }
+    next();
+});
+
+// Serve static files from the 'public' and 'react-dist' (React SPA) directories
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'react-dist')));
 
 // Initialize PostgreSQL Table
 createUserTable();
@@ -26,19 +46,23 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public/index.html'));
 });
 
-// Handle standard HTML routes (e.g., /auth -> auth.html)
-app.get('/:page', (req, res, next) => {
+// Generic fall-through route handler
+app.get('/:page', (req, res) => {
     const page = req.params.page;
-    if (page.startsWith('api')) return next();
-    res.sendFile(path.join(__dirname, `public/${page}.html`), (err) => {
-        if (err) next();
+    const filePath = path.join(__dirname, 'public', `${page}.html`);
+    res.sendFile(filePath, (err) => {
+        if (err) {
+            console.error(`[Router Error] Resource not found: ${filePath}`);
+            res.status(404).sendFile(path.join(__dirname, 'public', 'index.html'));
+        }
     });
 });
 
-// For Vercel, we can both export and listen
+
 const PORT = process.env.PORT || 3000;
-if (process.env.NODE_ENV !== 'production') {
-    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-}
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+    console.log(`Routes enabled: ${dashboardRoutes.join(', ')}`);
+});
 
 module.exports = app;

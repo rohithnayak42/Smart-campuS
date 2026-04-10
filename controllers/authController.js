@@ -75,7 +75,7 @@ const changePassword = async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(newPassword, salt);
         
-        await db.query('UPDATE users SET password = $1, is_first_login = false WHERE id = $2', [hashedPassword, userId]);
+        await db.query('UPDATE users SET password = $1, temp_password = NULL, is_first_login = false WHERE id = $2', [hashedPassword, userId]);
 
         const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1d' });
         res.json({ message: 'Password updated successfully', token, role: user.role });

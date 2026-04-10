@@ -307,8 +307,17 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .spinner { animation: spin 1s linear infinite; width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 8px; }
 
         .hidden { display: none !important; }
+        
+        .error-message {
+            color: #ef4444; background: #fee2e2; padding: 10px; border-radius: 8px; 
+            margin-bottom: 15px; font-size: 13px; text-align: center; border: 1px solid #fca5a5;
+            display: none;
+            width: 100%;
+        }
     </style>
 </head>
 <body>
@@ -358,6 +367,8 @@
             
             <form id="login-form">
                 <input type="hidden" id="selected-role">
+                <div id="login-error" class="error-message"></div>
+                
                 <div class="input-group">
                     <label>Email Address</label>
                     <input type="email" id="email" placeholder="Enter your email" required>
@@ -372,7 +383,9 @@
                     </div>
                     <a href="#" onclick="showForgotPassword()" class="forgot-link">Forgot password?</a>
                 </div>
-                <button type="submit" class="login-btn">Sign In</button>
+                <button type="submit" class="login-btn" id="login-btn-submit">
+                    <span style="display:flex; align-items:center; justify-content:center;"><span class="btn-text">Sign In</span></span>
+                </button>
                 
                 <!-- Role-based Google Login -->
                 <div id="admin-extras" class="hidden">
@@ -410,6 +423,7 @@
             <h2>Verify Identity</h2>
             <p>Enter the 6-digit OTP sent to your email.</p>
             <form id="otp-form">
+                <div id="otp-error" class="error-message"></div>
                 <div class="otp-container">
                     <input type="text" maxlength="1" class="otp-box" required />
                     <input type="text" maxlength="1" class="otp-box" required />
@@ -424,7 +438,9 @@
                     <button type="button" class="resend-btn" onclick="resendOTP()">Resend</button>
                 </div>
 
-                <button type="submit" class="login-btn">Verify Account</button>
+                <button type="submit" class="login-btn" id="otp-btn-submit">
+                    <span style="display:flex; align-items:center; justify-content:center;"><span class="btn-text">Verify Account</span></span>
+                </button>
             </form>
         </div>
 
@@ -433,12 +449,15 @@
             <h2>Set New Password</h2>
             <p>Required for your first secure login.</p>
             <form id="change-pass-form">
+                <div id="pwd-error" class="error-message"></div>
                 <input type="hidden" id="change-pass-userid">
                 <div class="input-group">
                     <label>New Password</label>
                     <input type="password" id="new-pwd" placeholder="Minimum 6 characters" required>
                 </div>
-                <button type="submit" class="login-btn">Update & Login</button>
+                <button type="submit" class="login-btn" id="pwd-btn-submit">
+                    <span style="display:flex; align-items:center; justify-content:center;"><span class="btn-text">Update & Login</span></span>
+                </button>
             </form>
         </div>
     </div>
@@ -569,6 +588,16 @@
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const role = document.getElementById('selected-role').value;
+            const btn = document.getElementById('login-btn-submit');
+            const errBox = document.getElementById('login-error');
+            const btnText = btn.querySelector('.btn-text');
+
+            errBox.style.display = 'none';
+            btn.disabled = true;
+            btn.style.opacity = '0.7';
+            btn.style.cursor = 'not-allowed';
+            btnText.innerHTML = `<i data-lucide="loader-2" class="spinner"></i> Signing in...`;
+            if (window.lucide) lucide.createIcons();
 
             try {
                 const res = await fetch('/api/auth/login', {
@@ -577,24 +606,43 @@
                     body: JSON.stringify({ email, password, role })
                 });
                 const data = await res.json();
-                if (!res.ok) alert(data.message);
-                else {
+                if (!res.ok) {
+                    errBox.textContent = data.message || "Invalid credentials. Please try again.";
+                    errBox.style.display = 'block';
+                } else {
                     if (data.step === 'OTP') showView('otp');
                     else if (data.step === 'CHANGE_PASSWORD') {
                         document.getElementById('change-pass-userid').value = data.userId;
                         showView('changePass');
                     } else handleLoginSuccess(data.token, data.role);
                 }
-            } catch (err) { alert('Error logging in'); }
+            } catch (err) { 
+                errBox.textContent = 'Network error parsing authentication token.';
+                errBox.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                btn.style.cursor = 'pointer';
+                btnText.textContent = 'Sign In';
+            }
         });
 
         document.getElementById('otp-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = document.getElementById('email').value;
             const role = document.getElementById('selected-role').value;
+            const btn = document.getElementById('otp-btn-submit');
+            const errBox = document.getElementById('otp-error');
+            const btnText = btn.querySelector('.btn-text');
             
-            // Collect OTP from boxes
             const otp = Array.from(otpInputs).map(input => input.value).join('');
+
+            errBox.style.display = 'none';
+            btn.disabled = true;
+            btn.style.opacity = '0.7';
+            btn.style.cursor = 'not-allowed';
+            btnText.innerHTML = `<i data-lucide="loader-2" class="spinner"></i> Verifying...`;
+            if (window.lucide) lucide.createIcons();
 
             try {
                 const res = await fetch('/api/auth/verify-otp', {
@@ -603,15 +651,36 @@
                     body: JSON.stringify({ email, otp, role })
                 });
                 const data = await res.json();
-                if (!res.ok) alert(data.message);
+                if (!res.ok) {
+                    errBox.textContent = data.message || "Invalid OTP entered.";
+                    errBox.style.display = 'block';
+                }
                 else handleLoginSuccess(data.token, data.role);
-            } catch (err) { alert('OTP Verification failed'); }
+            } catch (err) { 
+                errBox.textContent = 'Failed to verify OTP over network connection.';
+                errBox.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                btn.style.cursor = 'pointer';
+                btnText.textContent = 'Verify Account';
+            }
         });
 
         document.getElementById('change-pass-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const userId = document.getElementById('change-pass-userid').value;
             const newPassword = document.getElementById('new-pwd').value;
+            const btn = document.getElementById('pwd-btn-submit');
+            const errBox = document.getElementById('pwd-error');
+            const btnText = btn.querySelector('.btn-text');
+
+            errBox.style.display = 'none';
+            btn.disabled = true;
+            btn.style.opacity = '0.7';
+            btn.style.cursor = 'not-allowed';
+            btnText.innerHTML = `<i data-lucide="loader-2" class="spinner"></i> Updating...`;
+            if (window.lucide) lucide.createIcons();
 
             try {
                 const res = await fetch('/api/auth/change-password', {
@@ -620,9 +689,20 @@
                     body: JSON.stringify({ userId, newPassword })
                 });
                 const data = await res.json();
-                if (!res.ok) alert(data.message);
+                if (!res.ok) {
+                    errBox.textContent = data.message || "Could not update the password.";
+                    errBox.style.display = 'block';
+                }
                 else handleLoginSuccess(data.token, data.role);
-            } catch (err) { alert('Password change failed'); }
+            } catch (err) { 
+                errBox.textContent = 'Network error preventing password registry reset.';
+                errBox.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                btn.style.cursor = 'pointer';
+                btnText.textContent = 'Update & Login';
+            }
         });
 
         window.addEventListener('DOMContentLoaded', () => {

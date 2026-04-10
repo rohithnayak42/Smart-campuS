@@ -16,8 +16,8 @@ const addUser = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, salt);
 
         const { rows: newUser } = await db.query(
-            'INSERT INTO users (name, email, real_email, password, role, is_first_login) VALUES ($1, $2, $3, $4, $5, true) RETURNING *',
-            [name, loginEmail, realEmail, hashedPassword, role]
+            'INSERT INTO users (name, email, real_email, password, temp_password, role, is_first_login) VALUES ($1, $2, $3, $4, $5, $6, true) RETURNING *',
+            [name, loginEmail, realEmail, hashedPassword, password, role]
         );
 
         const user = newUser[0];
@@ -58,10 +58,33 @@ Smart Campus`;
     }
 };
 
+const updateUser = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name, loginEmail, realEmail, role } = req.body;
+        
+        // Ensure no other user has this login email
+        const { rows: existingUser } = await db.query('SELECT id FROM users WHERE email = $1 AND id != $2', [loginEmail, id]);
+        if (existingUser.length > 0) {
+            return res.status(400).json({ message: 'Login Email already in use by another user' });
+        }
+
+        await db.query(
+            'UPDATE users SET name = $1, email = $2, real_email = $3, role = $4, updated_at = CURRENT_TIMESTAMP WHERE id = $5',
+            [name, loginEmail, realEmail, role, id]
+        );
+
+        res.json({ message: 'User updated successfully' });
+    } catch (error) {
+        console.error('Error updating user:', error);
+        res.status(500).json({ error: 'Server error during user update' });
+    }
+};
+
 const getUsers = async (req, res) => {
     try {
         const { role } = req.query;
-        let query = 'SELECT id, name, email as login_email, real_email, role, is_first_login, created_at FROM users';
+        let query = 'SELECT id, name, email as login_email, real_email, role, is_first_login, temp_password, created_at FROM users';
         let params = [];
         
         if (role && role !== 'All') {
@@ -158,6 +181,32 @@ const getSubjects = async (req, res) => {
     }
 };
 
+const updateSubject = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name, code, credits, assignedFaculty } = req.body;
+        await db.query(
+            'UPDATE subjects SET name = $1, code = $2, credits = $3, assigned_faculty = $4 WHERE id = $5',
+            [name, code, credits, assignedFaculty, id]
+        );
+        res.json({ message: 'Subject updated successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
+const deleteSubject = async (req, res) => {
+    try {
+        const { id } = req.params;
+        await db.query('DELETE FROM subjects WHERE id = $1', [id]);
+        res.json({ message: 'Subject deleted successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
 // Timetable CRUD
 const addSchedule = async (req, res) => {
     try {
@@ -215,7 +264,7 @@ const resetPassword = async (req, res) => {
         const { newPassword } = req.body;
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(newPassword, salt);
-        await db.query('UPDATE users SET password = $1, is_first_login = true WHERE id = $2', [hashedPassword, id]);
+        await db.query('UPDATE users SET password = $1, temp_password = $2, is_first_login = true WHERE id = $3', [hashedPassword, newPassword, id]);
         res.json({ message: 'Password reset and marked as first login' });
     } catch (error) {
         console.error(error);
@@ -224,6 +273,6 @@ const resetPassword = async (req, res) => {
 };
 
 module.exports = { 
-    addUser, getUsers, deleteUser, getStats, getIssues, updateIssueStatus, 
-    addSubject, getSubjects, addSchedule, getSchedules, addNotice, getNotices, resetPassword 
+    addUser, getUsers, deleteUser, updateUser, getStats, getIssues, updateIssueStatus, 
+    addSubject, getSubjects, updateSubject, deleteSubject, addSchedule, getSchedules, addNotice, getNotices, resetPassword 
 };

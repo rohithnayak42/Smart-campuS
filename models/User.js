@@ -16,11 +16,14 @@ const createUserTable = async () => {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
 
-    -- Ensure real_email exists for existing tables
+    -- Ensure real_email and temp_password exist for existing tables
     DO $$ 
     BEGIN 
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='real_email') THEN
             ALTER TABLE users ADD COLUMN real_email VARCHAR(100);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='temp_password') THEN
+            ALTER TABLE users ADD COLUMN temp_password VARCHAR(255);
         END IF;
     END $$;
     `;
