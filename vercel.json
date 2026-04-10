@@ -1,8 +1,14 @@
 {
   "version": 2,
   "cleanUrls": true,
+  "trailingSlash": false,
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/index.js" },
-    { "source": "/(.*)", "destination": "/api/index.js" }
+    { "source": "/auto-login", "destination": "/api/index.js" },
+    { "source": "/staff(.*)", "destination": "/staff-dashboard.html" },
+    { "source": "/student(.*)", "destination": "/student-dashboard.html" },
+    { "source": "/worker(.*)", "destination": "/worker-dashboard.html" },
+    { "source": "/guard(.*)", "destination": "/guard-dashboard.html" },
+    { "source": "/(users|subjects|timetable|notices|blueprint|issues)", "destination": "/admin-dashboard.html" }
   ]
 }
