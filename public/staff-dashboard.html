@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Campus - Faculty Dashboard</title>
+    <link rel="stylesheet" href="/css/dashboards.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">Faculty Portal</div>
+            <nav class="sidebar-nav">
+                <a href="#" class="active">My Schedule</a>
+                <a href="#">Mark Attendance</a>
+                <a href="#">Upload Materials</a>
+                <a href="#">Student Q&A</a>
+                <a href="#">Admin Queries</a>
+                <a href="#" onclick="logout()" style="margin-top: 50px; color: #f87171;">Logout</a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <h2>Welcome, Faculty!</h2>
+            
+            <div class="card">
+                <h3>Today's Schedule</h3>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Class/Subject</th>
+                            <th>Location (Map Link)</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>09:00 AM</td>
+                            <td>Software Engineering - CS A</td>
+                            <td><a href="#">Room 101 🗺️</a></td>
+                            <td><button class="btn btn-accent">Mark Attendance</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="card">
+                    <h3>Upload Notes</h3>
+                    <form>
+                        <div class="form-group">
+                            <label>Subject</label>
+                            <input type="text" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>File (PDF/PPT)</label>
+                            <input type="file" class="form-control">
+                        </div>
+                        <button type="submit" class="btn btn-accent">Upload Material</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h3>Pending Student Doubts</h3>
+                    <div style="border: 1px solid var(--border-color); padding: 10px; border-radius: 6px; margin-bottom: 10px;">
+                        <p><strong>John Doe (Student):</strong> What is the difference between monolithic and microservices architecture?</p>
+                        <textarea class="form-control" rows="2" placeholder="Write reply..."></textarea>
+                        <button class="btn btn-accent" style="margin-top: 5px;">Reply</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="logout-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; z-index:1000;">
+        <div style="background:white; padding:30px; border-radius:15px; width:350px; text-align:center;">
+            <h3>Ready to Logout?</h3>
+            <p style="margin:15px 0;">Are you sure you want to exit your portal session?</p>
+            <div style="display:flex; gap:10px; justify-content:center;">
+                <button onclick="confirmLogout()" style="background:#f87171; color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer;">Yes, Logout</button>
+                <button onclick="closeLogout()" style="background:#e5e7eb; padding:10px 20px; border-radius:8px; cursor:pointer; border:none;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('sc_token');
+        if(!token || localStorage.getItem('sc_role') !== 'staff') {
+            window.location.href = '/auth';
+        }
+
+        async function fetchSchedule() {
+            const res = await fetch('/api/stakeholder/faculty/schedule', { headers: { 'Authorization': `Bearer ${token}` } });
+            const data = await res.json();
+            const body = document.querySelector('tbody');
+            body.innerHTML = data.map(x => `
+                <tr>
+                    <td>${x.time_slot}</td>
+                    <td>${x.subject_name} - ${x.batch}</td>
+                    <td><a href="#">Room ${x.room || 'N/A'} 🗺️</a></td>
+                    <td><button class="btn btn-accent" onclick="markAttendance(${x.id}, '${x.subject_name}', '${x.batch}')">Mark Attendance</button></td>
+                </tr>
+            `).join('');
+        }
+
+        async function fetchDoubts() {
+            const res = await fetch('/api/stakeholder/faculty/doubts', { headers: { 'Authorization': `Bearer ${token}` } });
+            const data = await res.json();
+            const container = document.querySelector('.card:last-child');
+            container.innerHTML = '<h3>Pending Student Doubts</h3>' + data.map(x => `
+                <div style="border: 1px solid #e5e7eb; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                    <p><strong>${x.student_name} (${x.subject}):</strong> ${x.question}</p>
+                    ${x.reply ? `<p style="margin-top:10px; color:#166534;"><strong>Reply:</strong> ${x.reply}</p>` : `
+                        <textarea id="reply-${x.id}" class="form-control" rows="2" placeholder="Write reply..." style="margin-top:10px;"></textarea>
+                        <button class="btn btn-accent" style="margin-top: 5px;" onclick="replyToDoubt(${x.id})">Reply</button>
+                    `}
+                </div>
+            `).join('');
+        }
+
+        async function replyToDoubt(id) {
+            const reply = document.getElementById(`reply-${id}`).value;
+            await fetch(`/api/stakeholder/faculty/doubts/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ reply })
+            });
+            fetchDoubts();
+        }
+
+        async function markAttendance(id, subject, batch) {
+            await fetch('/api/stakeholder/faculty/attendance', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ schedule_id: id, subject, batch })
+            });
+            alert('Attendance marked!');
+        }
+
+        document.querySelector('form').onsubmit = async (e) => {
+            e.preventDefault();
+            const formData = new FormData();
+            formData.append('subject', e.target.querySelector('input').value);
+            formData.append('file', e.target.querySelector('input[type="file"]').files[0]);
+            
+            await fetch('/api/stakeholder/materials', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: formData
+            });
+            alert('Material uploaded successfully!');
+            e.target.reset();
+        };
+
+        function logout() { document.getElementById('logout-modal').style.display='flex'; }
+        function closeLogout() { document.getElementById('logout-modal').style.display='none'; }
+        function confirmLogout() { localStorage.clear(); window.location.href='/auth'; }
+
+        fetchSchedule();
+        fetchDoubts();
+    </script>
+</body>
+</html>

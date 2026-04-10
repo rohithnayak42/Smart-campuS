@@ -65,15 +65,65 @@
         </main>
     </div>
 
+    <div id="logout-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; z-index:1000;">
+        <div style="background:white; padding:30px; border-radius:15px; width:350px; text-align:center;">
+            <h3>Ready to Logout?</h3>
+            <p style="margin:15px 0;">Are you sure you want to exit your portal session?</p>
+            <div style="display:flex; gap:10px; justify-content:center;">
+                <button onclick="confirmLogout()" style="background:#f87171; color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer;">Yes, Logout</button>
+                <button onclick="closeLogout()" style="background:#e5e7eb; padding:10px 20px; border-radius:8px; cursor:pointer; border:none;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const token = localStorage.getItem('sc_token');
-        if(!token || localStorage.getItem('sc_role') !== 'Worker') {
+        if(!token || localStorage.getItem('sc_role') !== 'worker') {
             window.location.href = '/auth';
         }
-        function logout() {
-            localStorage.clear();
-            window.location.href = '/auth';
+
+        async function fetchTasks() {
+            const res = await fetch('/api/stakeholder/tasks', { headers: { 'Authorization': `Bearer ${token}` } });
+            const data = await res.json();
+            const body = document.querySelector('tbody');
+            body.innerHTML = data.map(x => `
+                <tr>
+                    <td>${x.title}</td>
+                    <td>${x.description}</td>
+                    <td><span class="role-badge" style="background:${x.status === 'Completed' ? '#DCFCE7' : '#FEE2E2'}; color:${x.status === 'Completed' ? '#166534' : '#991B1B'}">${x.status}</span></td>
+                    <td>
+                        ${x.status === 'Pending' ? `<button class="btn btn-accent" style="padding: 5px 10px; font-size: 0.8rem;" onclick="updateTask(${x.id}, 'Completed')">Mark Done</button>` : 'System Verified'}
+                    </td>
+                </tr>
+            `).join('');
         }
+
+        async function updateTask(id, status) {
+            await fetch(`/api/stakeholder/tasks/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ status })
+            });
+            fetchTasks();
+        }
+
+        document.querySelector('form').onsubmit = async (e) => {
+            e.preventDefault();
+            const description = e.target.querySelector('textarea').value;
+            await fetch('/api/stakeholder/issues', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ title: 'WORKER QUERY', description })
+            });
+            alert('Query submitted to Admin!');
+            e.target.reset();
+        };
+
+        function logout() { document.getElementById('logout-modal').style.display='flex'; }
+        function closeLogout() { document.getElementById('logout-modal').style.display='none'; }
+        function confirmLogout() { localStorage.clear(); window.location.href='/auth'; }
+
+        fetchTasks();
     </script>
 </body>
 </html>

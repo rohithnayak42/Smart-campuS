@@ -98,15 +98,62 @@
         </main>
     </div>
 
+    <div id="logout-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; z-index:1000;">
+        <div style="background:white; padding:30px; border-radius:15px; width:350px; text-align:center;">
+            <h3>Ready to Logout?</h3>
+            <p style="margin:15px 0;">Are you sure you want to exit your portal session?</p>
+            <div style="display:flex; gap:10px; justify-content:center;">
+                <button onclick="confirmLogout()" style="background:#f87171; color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer;">Yes, Logout</button>
+                <button onclick="closeLogout()" style="background:#e5e7eb; padding:10px 20px; border-radius:8px; cursor:pointer; border:none;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const token = localStorage.getItem('sc_token');
-        if(!token || localStorage.getItem('sc_role') !== 'Student') {
+        if(!token || localStorage.getItem('sc_role') !== 'student') {
             window.location.href = '/auth';
         }
-        function logout() {
-            localStorage.clear();
-            window.location.href = '/auth';
+
+        async function fetchTimetable() {
+            const res = await fetch('/api/stakeholder/student/timetable', { headers: { 'Authorization': `Bearer ${token}` } });
+            const data = await res.json();
+            const body = document.querySelector('tbody');
+            body.innerHTML = data.map(x => `
+                <tr>
+                    <td>${x.time_slot}</td>
+                    <td>${x.subject_name}</td>
+                    <td>${x.room}</td>
+                    <td>${x.faculty_name}</td>
+                </tr>
+            `).join('');
         }
+
+        async function fetchProfile() {
+            const res = await fetch('/api/stakeholder/profile', { headers: { 'Authorization': `Bearer ${token}` } });
+            const data = await res.json();
+            document.querySelector('h2').textContent = `Welcome, ${data.name}! (${data.batch || 'General'})`;
+        }
+
+        document.querySelector('form').onsubmit = async (e) => {
+            e.preventDefault();
+            const subject = e.target.querySelector('input').value;
+            const question = e.target.querySelector('textarea').value;
+            await fetch('/api/stakeholder/student/doubts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ subject, question })
+            });
+            alert('Doubt submitted successfully!');
+            e.target.reset();
+        };
+
+        function logout() { document.getElementById('logout-modal').style.display='flex'; }
+        function closeLogout() { document.getElementById('logout-modal').style.display='none'; }
+        function confirmLogout() { localStorage.clear(); window.location.href='/auth'; }
+
+        fetchProfile();
+        fetchTimetable();
     </script>
 </body>
 </html>

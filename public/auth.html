@@ -331,23 +331,23 @@
             </header>
 
             <div class="role-grid">
-                <div class="role-card" onclick="selectRole('Admin')">
+                <div class="role-card" onclick="selectRole('admin')">
                     <div class="icon-wrapper"><i data-lucide="shield" size="50"></i></div>
                     <h3>Administrator</h3>
                 </div>
-                <div class="role-card" onclick="selectRole('Faculty')">
+                <div class="role-card" onclick="selectRole('staff')">
                     <div class="icon-wrapper"><i data-lucide="book-open" size="50"></i></div>
-                    <h3>Faculty (Professor)</h3>
+                    <h3>Staff (Faculty)</h3>
                 </div>
-                <div class="role-card" onclick="selectRole('Student')">
+                <div class="role-card" onclick="selectRole('student')">
                     <div class="icon-wrapper"><i data-lucide="graduation-cap" size="50"></i></div>
                     <h3>Student</h3>
                 </div>
-                <div class="role-card" onclick="selectRole('Worker')">
+                <div class="role-card" onclick="selectRole('worker')">
                     <div class="icon-wrapper"><i data-lucide="hard-hat" size="50"></i></div>
                     <h3>Worker</h3>
                 </div>
-                <div class="role-card" onclick="selectRole('Security Guard')">
+                <div class="role-card" onclick="selectRole('guard')">
                     <div class="icon-wrapper"><i data-lucide="user-check" size="50"></i></div>
                     <h3>Security Guard</h3>
                 </div>
@@ -472,11 +472,11 @@
         };
 
         const roleIcons = {
-            'Admin': 'shield',
-            'Faculty': 'book-open',
-            'Student': 'graduation-cap',
-            'Worker': 'hard-hat',
-            'Security Guard': 'user-check'
+            'admin': 'shield',
+            'staff': 'book-open',
+            'student': 'graduation-cap',
+            'worker': 'hard-hat',
+            'guard': 'user-check'
         };
 
         function showView(viewId) {
@@ -570,11 +570,11 @@
         }
 
         const routeMap = {
-            'Admin': '/admin-dashboard',
-            'Student': '/student-dashboard',
-            'Faculty': '/faculty-dashboard',
-            'Worker': '/worker-dashboard',
-            'Security Guard': '/guard-dashboard'
+            'admin': '/admin-dashboard',
+            'student': '/student-dashboard',
+            'staff': '/staff-dashboard',
+            'worker': '/worker-dashboard',
+            'guard': '/guard-dashboard'
         };
 
         function handleLoginSuccess(token, role) {
@@ -615,7 +615,7 @@
                     else if (data.step === 'CHANGE_PASSWORD') {
                         document.getElementById('change-pass-userid').value = data.userId;
                         showView('changePass');
-                    } else handleLoginSuccess(data.token, data.role);
+                    } else handleLoginSuccess(data.token, data.role.toLowerCase());
                 }
             } catch (err) { 
                 errBox.textContent = 'Network error parsing authentication token.';

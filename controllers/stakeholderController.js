@@ -1,0 +1,302 @@
+const db = require('../config/db');
+
+// Generic Profile
+const getProfile = async (req, res) => {
+    try {
+        const { rows } = await db.query('SELECT name, email, role, batch FROM users WHERE id = $1', [req.user.id]);
+        if (rows.length === 0) return res.status(404).json({ message: 'User not found' });
+        res.json(rows[0]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
+// Subjects for Dropdowns
+const getSharedSubjects = async (req, res) => {
+    try {
+        const { rows } = await db.query('SELECT * FROM subjects ORDER BY name ASC');
+        res.json(rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
+// Student Timetable
+const getStudentTimetable = async (req, res) => {
+    try {
+        // First get student's batch
+        const userRes = await db.query('SELECT batch FROM users WHERE id = $1', [req.user.id]);
+        const batch = userRes.rows[0]?.batch;
+        
+        if (!batch) return res.json([]); // No batch assigned
+
+        const { rows } = await db.query(
+            'SELECT * FROM timetable_schedules WHERE batch = $1 ORDER BY day, time_slot',
+            [batch]
+        );
+        res.json(rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
+// Faculty Schedule
+const getFacultySchedule = async (req, res) => {
+    try {
+        const userRes = await db.query('SELECT name FROM users WHERE id = $1', [req.user.id]);
+        const name = userRes.rows[0]?.name;
+
+        const { rows } = await db.query(
+            'SELECT * FROM timetable_schedules WHERE faculty_name = $1 ORDER BY day, time_slot',
+            [name]
+        );
+        res.json(rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
+const markAttendance = async (req, res) => {
+    try {
+        const { schedule_id, subject, batch } = req.body;
+        // Ensure table exists
+        await db.query(`CREATE TABLE IF NOT EXISTS faculty_attendance (
+            id SERIAL PRIMARY KEY,
+            faculty_id INTEGER,
+            schedule_id INTEGER,
+            subject VARCHAR(255),
+            batch VARCHAR(50),
+            marked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )`);
+        
+        await db.query(
+            'INSERT INTO faculty_attendance (faculty_id, schedule_id, subject, batch) VALUES ($1, $2, $3, $4)',
+            [req.user.id, schedule_id, subject, batch]
+        );
+        res.json({ success: true, message: 'Attendance recorded' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server error marking attendance' });
+    }
+};
+
+// Common Notices
+const getMyNotices = async (req, res) => {
+    try {
+        const { rows } = await db.query(
+            `SELECT * FROM campus_notices 
+             WHERE target_roles = 'Everyone' OR target_roles ILIKE $1 
+             ORDER BY created_at DESC`,
+            [`%${req.user.role}%`]
+        );
+        res.json(rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
+const postFacultyNotice = async (req, res) => {
+    try {
+        const { title, message, duration_hours } = req.body;
+        const expiresAt = duration_hours 
+            ? new Date(Date.now() + duration_hours * 60 * 60 * 1000)
+            : null;
+
+        const { rows } = await db.query(
+            'INSERT INTO campus_notices (title, message, target_roles, duration_hours, expires_at) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+            [title, message, 'Students', duration_hours || 0, expiresAt]
+        );
+        res.status(201).json(rows[0]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
+// Doubts (Student asks, Faculty replies)
+const submitDoubt = async (req, res) => {
+    try {
+        const { subject, question } = req.body;
+        const userRes = await db.query('SELECT name FROM users WHERE id = $1', [req.user.id]);
+        const studentName = userRes.rows[0]?.name;
+
+        const { rows } = await db.query(
+            'INSERT INTO student_doubts (student_id, student_name, subject, question) VALUES ($1, $2, $3, $4) RETURNING *',
+            [req.user.id, studentName, subject, question]
+        );
+        res.json(rows[0]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
+const getStudentDoubts = async (req, res) => {
+    try {
+        const { rows } = await db.query('SELECT * FROM student_doubts WHERE student_id = $1 ORDER BY created_at DESC', [req.user.id]);
+        res.json(rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
+const getFacultyDoubts = async (req, res) => {
+    try {
+        // Faculty sees doubts for their assigned subjects
+        const facultyRes = await db.query('SELECT name FROM users WHERE id = $1', [req.user.id]);
+        const facultyName = facultyRes.rows[0]?.name;
+
+        // Get subjects assigned to this faculty
+        const subRes = await db.query('SELECT name FROM subjects WHERE assigned_faculty = $1', [facultyName]);
+        const subjects = subRes.rows.map(s => s.name);
+
+        if (subjects.length === 0) return res.json([]);
+
+        const { rows } = await db.query(
+            'SELECT * FROM student_doubts WHERE subject = ANY($1) ORDER BY created_at DESC',
+            [subjects]
+        );
+        res.json(rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
+const replyToDoubt = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { reply } = req.body;
+        const { rows } = await db.query(
+            'UPDATE student_doubts SET reply = $1, status = $2 WHERE id = $3 RETURNING *',
+            [reply, 'Resolved', id]
+        );
+        res.json(rows[0]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
+// Tasks & Duties (Guard/Worker)
+const getMyTasks = async (req, res) => {
+    try {
+        const { rows } = await db.query(
+            'SELECT * FROM stakeholder_tasks WHERE assignee_id = $1 ORDER BY created_at DESC',
+            [req.user.id]
+        );
+        res.json(rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
+const updateTaskStatus = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+        const { rows } = await db.query(
+            'UPDATE stakeholder_tasks SET status = $1 WHERE id = $2 AND assignee_id = $3 RETURNING *',
+            [status, id, req.user.id]
+        );
+        res.json(rows[0]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
+// Issues Reporting
+const reportIssue = async (req, res) => {
+    try {
+        const { title, description } = req.body;
+        const userRes = await db.query('SELECT name, role FROM users WHERE id = $1', [req.user.id]);
+        const { name, role } = userRes.rows[0];
+
+        const { rows } = await db.query(
+            'INSERT INTO campus_issues (title, description, reporter_name, reporter_role) VALUES ($1, $2, $3, $4) RETURNING *',
+            [title, description, name, role]
+        );
+        res.json(rows[0]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
+const getMyIssues = async (req, res) => {
+    try {
+        const userRes = await db.query('SELECT name FROM users WHERE id = $1', [req.user.id]);
+        const name = userRes.rows[0]?.name;
+        const { rows } = await db.query('SELECT * FROM campus_issues WHERE reporter_name = $1 ORDER BY created_at DESC', [name]);
+        res.json(rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
+const uploadMaterial = async (req, res) => {
+    try {
+        if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
+        const { subject } = req.body;
+        const { originalname, filename, mimetype } = req.file;
+        
+        const userRes = await db.query('SELECT name FROM users WHERE id = $1', [req.user.id]);
+        const facultyName = userRes.rows[0]?.name;
+
+        const { rows } = await db.query(
+            'INSERT INTO study_materials (faculty_id, faculty_name, subject, original_name, stored_name, file_type) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+            [req.user.id, facultyName, subject, originalname, filename, mimetype]
+        );
+        res.status(201).json(rows[0]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
+const getMaterials = async (req, res) => {
+    try {
+        const { subject } = req.query;
+        let query = 'SELECT * FROM study_materials';
+        let params = [];
+        if (subject) {
+            query += ' WHERE subject = $1';
+            params.push(subject);
+        }
+        query += ' ORDER BY created_at DESC';
+        const { rows } = await db.query(query, params);
+        res.json(rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
+module.exports = {
+    getProfile,
+    getSharedSubjects,
+    getStudentTimetable,
+    getFacultySchedule,
+    markAttendance,
+    getMyNotices,
+    postFacultyNotice,
+    submitDoubt,
+    getStudentDoubts,
+    getFacultyDoubts,
+    replyToDoubt,
+    getMyTasks,
+    updateTaskStatus,
+    reportIssue,
+    getMyIssues,
+    uploadMaterial,
+    getMaterials
+};

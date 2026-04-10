@@ -7,7 +7,7 @@ const login = async (req, res) => {
     try {
         const { email, password, role } = req.body;
         
-        const { rows } = await db.query('SELECT * FROM users WHERE email = $1 AND role = $2', [email, role]);
+        const { rows } = await db.query('SELECT * FROM users WHERE email = $1 AND LOWER(role) = LOWER($2)', [email, role]);
         const user = rows[0];
 
         if (!user) {
@@ -19,23 +19,29 @@ const login = async (req, res) => {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
 
-        if (user.is_first_login && role !== 'Admin') {
+        if (user.is_first_login && user.role.toLowerCase() !== 'admin') {
             return res.json({ message: 'First login, change password required', step: 'CHANGE_PASSWORD', userId: user.id });
         }
 
-        // Global OTP Generation for all users
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        const otpExpiry = new Date(Date.now() + 5 * 60000); // 5 mins
-        
-        await db.query('UPDATE users SET otp = $1, otp_expiry = $2 WHERE id = $3', [otp, otpExpiry, user.id]);
+        if (user.role.toLowerCase() === 'admin') {
+            // OTP Generation ONLY for Admin
+            const otp = Math.floor(100000 + Math.random() * 900000).toString();
+            const otpExpiry = new Date(Date.now() + 5 * 60000); // 5 mins
+            
+            await db.query('UPDATE users SET otp = $1, otp_expiry = $2 WHERE id = $3', [otp, otpExpiry, user.id]);
 
-        await sendEmail(
-            user.email,
-            'Smart Campus - Login OTP',
-            `Your OTP for login is: ${otp}. It is valid for 5 minutes.`
-        );
+            await sendEmail(
+                user.email,
+                'Smart Campus - Admin Login OTP',
+                `Your Admin login OTP is: ${otp}. It is valid for 5 minutes.`
+            );
 
-        return res.json({ message: 'OTP sent to your email', step: 'OTP' });
+            return res.json({ message: 'OTP sent to your email', step: 'OTP' });
+        }
+
+        // For all other stakeholders (Staff, Student, Guard, Worker), login directly without OTP.
+        const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1d' });
+        return res.json({ message: 'Login successful', token, role: user.role });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Server error' });

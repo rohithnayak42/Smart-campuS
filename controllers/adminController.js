@@ -14,6 +14,12 @@ const addUser = async (req, res) => {
             return res.status(400).json({ message: 'Missing required email fields' });
         }
 
+        const VALID_ROLES = ['admin', 'staff', 'student', 'worker', 'guard'];
+        const normalizedRole = role.toLowerCase();
+        if (!VALID_ROLES.includes(normalizedRole)) {
+            return res.status(400).json({ message: `Invalid role: ${role}. Must be one of ${VALID_ROLES.join(', ')}` });
+        }
+
         // Check if login email already exists
         const { rows: existingUser } = await db.query('SELECT id FROM users WHERE email = $1', [effectiveLoginEmail]);
         if (existingUser.length > 0) {
@@ -25,7 +31,7 @@ const addUser = async (req, res) => {
 
         const { rows: newUser } = await db.query(
             'INSERT INTO users (name, email, real_email, password, temp_password, role, is_first_login) VALUES ($1, $2, $3, $4, $5, $6, true) RETURNING *',
-            [name, effectiveLoginEmail, effectiveRealEmail, hashedPassword, password, role]
+            [name, effectiveLoginEmail, effectiveRealEmail, hashedPassword, password, normalizedRole]
         );
 
         const user = newUser[0];
@@ -42,7 +48,10 @@ const addUser = async (req, res) => {
                     <p style="margin: 0; color: #374151;"><strong>Login Email:</strong> ${effectiveLoginEmail}</p>
                     <p style="margin: 5px 0 0; color: #374151;"><strong>Default Password:</strong> ${password}</p>
                 </div>
-                <p style="color: #6B7280; font-size: 14px;">Please login and change your password immediately for security.</p>
+                <p style="color: #4B5563; line-height: 1.5;">Please use these credentials to log in. You will be required to change your password upon your first login for security purposes.</p>
+                <div style="text-align: center; margin-top: 30px;">
+                    <a href="${req.protocol}://${req.get('host')}/auth" style="background: #1F2937; color: #ffffff; padding: 12px 25px; text-decoration: none; border-radius: 6px; font-weight: bold;">Login to Portal</a>
+                </div>
                 <hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 20px 0;" />
                 <p style="font-size: 12px; color: #9CA3AF;">Regards,<br>Smart Campus Administration Hub</p>
             </div>
@@ -75,6 +84,12 @@ const updateUser = async (req, res) => {
         const { id } = req.params;
         const { name, loginEmail, realEmail, role } = req.body;
         
+        const VALID_ROLES = ['admin', 'staff', 'student', 'worker', 'guard'];
+        const normalizedRole = role ? role.toLowerCase() : null;
+        if (normalizedRole && !VALID_ROLES.includes(normalizedRole)) {
+            return res.status(400).json({ message: `Invalid role: ${role}` });
+        }
+
         // Ensure no other user has this login email
         const { rows: existingUser } = await db.query('SELECT id FROM users WHERE email = $1 AND id != $2', [loginEmail, id]);
         if (existingUser.length > 0) {
@@ -83,7 +98,7 @@ const updateUser = async (req, res) => {
 
         await db.query(
             'UPDATE users SET name = $1, email = $2, real_email = $3, role = $4, updated_at = CURRENT_TIMESTAMP WHERE id = $5',
-            [name, loginEmail, realEmail, role, id]
+            [name, loginEmail, realEmail, normalizedRole, id]
         );
 
         res.json({ message: 'User updated successfully' });
@@ -128,13 +143,15 @@ const deleteUser = async (req, res) => {
 const getStats = async (req, res) => {
     try {
         const userStats = await db.query('SELECT role, count(*) FROM users GROUP BY role');
-        const issueStats = await db.query('SELECT count(*) FROM campus_issues WHERE status = \'Pending\'');
+        const pendingIssueStats = await db.query('SELECT count(*) FROM campus_issues WHERE status = \'Pending\'');
+        const resolvedIssueStats = await db.query('SELECT count(*) FROM campus_issues WHERE status = \'Resolved\'');
         const subjectStats = await db.query('SELECT count(*) FROM subjects');
         const noticeStats = await db.query('SELECT count(*) FROM campus_notices');
         
         const stats = {
             roles: userStats.rows,
-            pendingIssues: issueStats.rows[0].count,
+            pendingIssues: pendingIssueStats.rows[0].count,
+            resolvedIssues: resolvedIssueStats.rows[0].count,
             totalSubjects: subjectStats.rows[0].count,
             totalNotices: noticeStats.rows[0].count,
             totalUsers: userStats.rows.reduce((acc, curr) => acc + parseInt(curr.count), 0)

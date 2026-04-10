@@ -25,6 +25,11 @@ const createUserTable = async () => {
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='temp_password') THEN
             ALTER TABLE users ADD COLUMN temp_password VARCHAR(255);
         END IF;
+
+        -- Normalize roles
+        UPDATE users SET role = 'staff' WHERE role ILIKE 'faculty' OR role ILIKE 'professor';
+        UPDATE users SET role = 'guard' WHERE role ILIKE 'security guard' OR role ILIKE 'security';
+        UPDATE users SET role = LOWER(role) WHERE role NOT IN ('staff', 'guard', 'student', 'worker', 'admin');
     END $$;
     `;
     
@@ -111,6 +116,46 @@ const createUserTable = async () => {
                     ALTER TABLE campus_blueprints ADD COLUMN uploaded_by VARCHAR(100) DEFAULT 'Admin';
                 END IF;
             END $$;
+            -- Add batch column to users if missing
+            DO $$
+            BEGIN
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='batch') THEN
+                    ALTER TABLE users ADD COLUMN batch VARCHAR(50);
+                END IF;
+            END $$;
+
+            CREATE TABLE IF NOT EXISTS student_doubts (
+                id SERIAL PRIMARY KEY,
+                student_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                student_name VARCHAR(100),
+                subject VARCHAR(100),
+                question TEXT NOT NULL,
+                reply TEXT,
+                status VARCHAR(20) DEFAULT 'Pending',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE TABLE IF NOT EXISTS stakeholder_tasks (
+                id SERIAL PRIMARY KEY,
+                assignee_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                assignee_role VARCHAR(50),
+                title VARCHAR(200),
+                description TEXT,
+                status VARCHAR(20) DEFAULT 'Pending',
+                priority VARCHAR(20) DEFAULT 'Normal',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE TABLE IF NOT EXISTS study_materials (
+                id SERIAL PRIMARY KEY,
+                faculty_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                faculty_name VARCHAR(100),
+                subject VARCHAR(100),
+                original_name VARCHAR(255),
+                stored_name VARCHAR(255),
+                file_type VARCHAR(50),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
         `);
 
         console.log('Database schema ensured (Users, Subjects, Schedules, Notices, Issues, Blueprints).');
