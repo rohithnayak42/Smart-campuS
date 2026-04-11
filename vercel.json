@@ -4,7 +4,8 @@
   "trailingSlash": false,
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api" },
-    { "source": "/auto-login", "destination": "/api" }
+    { "source": "/auto-login", "destination": "/api" },
+    { "source": "/((?!api/|auto-login).*)", "destination": "/api" }
   ]
 }
 
