@@ -208,6 +208,16 @@
                 else handleLoginSuccess(data.token, data.role);
             } catch (err) { alert('Password change failed'); }
         });
+        // Check for role in URL
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const role = urlParams.get('role');
+            if (role) {
+                // Wait a bit for the DOM to be fully ready and show the view
+                setTimeout(() => selectRole(role), 100);
+            }
+        });
     </script>
+
 </body>
 </html>
