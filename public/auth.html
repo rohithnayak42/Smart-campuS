@@ -83,8 +83,8 @@
 
         <!-- OTP Verification View -->
         <div class="card auth-card hidden" id="otp-view">
-            <h2>Verify Admin OTP</h2>
-            <p>An OTP has been sent to your email.</p>
+            <h2>Verify Your Identity</h2>
+            <p>A secure OTP has been sent to your email.</p>
             <form id="otp-form">
                 <div class="form-group">
                     <label>OTP Code</label>
@@ -176,12 +176,13 @@
             e.preventDefault();
             const email = document.getElementById('email').value;
             const otp = document.getElementById('otp').value;
+            const role = document.getElementById('selected-role').value;
 
             try {
                 const res = await fetch('/api/auth/verify-otp', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, otp })
+                    body: JSON.stringify({ email, otp, role })
                 });
                 const data = await res.json();
 

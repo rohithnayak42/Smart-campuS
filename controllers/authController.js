@@ -19,27 +19,23 @@ const login = async (req, res) => {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
 
-        if (role === 'Admin') {
-            const otp = Math.floor(100000 + Math.random() * 900000).toString();
-            const otpExpiry = new Date(Date.now() + 5 * 60000); // 5 mins
-            
-            await db.query('UPDATE users SET otp = $1, otp_expiry = $2 WHERE id = $3', [otp, otpExpiry, user.id]);
-
-            await sendEmail(
-                user.email,
-                'Smart Campus - Admin Login OTP',
-                `Your OTP for login is: ${otp}. It is valid for 5 minutes.`
-            );
-
-            return res.json({ message: 'OTP sent to admin email', step: 'OTP' });
-        }
-
         if (user.is_first_login && role !== 'Admin') {
             return res.json({ message: 'First login, change password required', step: 'CHANGE_PASSWORD', userId: user.id });
         }
 
-        const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1d' });
-        res.json({ message: 'Login successful', token, role: user.role });
+        // Global OTP Generation for all users
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const otpExpiry = new Date(Date.now() + 5 * 60000); // 5 mins
+        
+        await db.query('UPDATE users SET otp = $1, otp_expiry = $2 WHERE id = $3', [otp, otpExpiry, user.id]);
+
+        await sendEmail(
+            user.email,
+            'Smart Campus - Login OTP',
+            `Your OTP for login is: ${otp}. It is valid for 5 minutes.`
+        );
+
+        return res.json({ message: 'OTP sent to your email', step: 'OTP' });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Server error' });
@@ -48,9 +44,9 @@ const login = async (req, res) => {
 
 const verifyOtp = async (req, res) => {
     try {
-        const { email, otp } = req.body;
+        const { email, otp, role } = req.body;
         
-        const { rows } = await db.query('SELECT * FROM users WHERE email = $1 AND role = $2', [email, 'Admin']);
+        const { rows } = await db.query('SELECT * FROM users WHERE email = $1 AND role = $2', [email, role]);
         const user = rows[0];
 
         if (!user || user.otp !== otp || new Date(user.otp_expiry) < new Date()) {
