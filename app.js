@@ -31,8 +31,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Path normalization for serverless environments (Root-Standard)
-const PUBLIC_DIR = path.resolve(process.cwd());
+const PUBLIC_DIR = path.resolve(process.cwd(), 'public');
 const UPLOADS_DIR = path.resolve(process.cwd(), 'uploads');
+
 
 console.log('--- SYSTEM: Server Runtime Paths ---');
 console.log('CWD:', process.cwd());
@@ -55,10 +56,11 @@ app.get('/', (req, res) => {
         if (err) {
             console.error('--- ERROR: Landing page (index.html) not found ---');
             console.error('Path attempted:', path.join(PUBLIC_DIR, 'index.html'));
-            res.status(404).send('Landing Page Not Found - System Configuration Issue');
+            res.status(404).send('Landing Page Not Found - Folder: ' + PUBLIC_DIR);
         }
     });
 });
+
 
 
 // DB Init - DEFERRED to /api/health for zero-blocking startup
