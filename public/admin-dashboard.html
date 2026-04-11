@@ -49,7 +49,8 @@
                         <thead>
                             <tr>
                                 <th>Name</th>
-                                <th>Email</th>
+                                <th>Login Email</th>
+                                <th>Real Email</th>
                                 <th>Role</th>
                                 <th>Actions</th>
                             </tr>
@@ -96,20 +97,35 @@
     </div>
 
     <!-- Modals -->
-    <div id="add-user-modal" class="hidden" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;">
-        <div class="card" style="width: 400px;">
-            <h3>Add New User</h3>
+    <div id="add-user-modal" class="hidden" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(4px);">
+        <div class="card" style="width: 480px; padding: 30px; border: 1px solid var(--border-color);">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+                <div>
+                    <h3 style="margin-bottom: 5px;">Register New User</h3>
+                    <p class="text-muted" style="font-size: 0.9rem;">Credentials will be sent to the personal email.</p>
+                </div>
+                <button type="button" onclick="document.getElementById('add-user-modal').classList.add('hidden')" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">&times;</button>
+            </div>
+            
             <form id="add-user-form">
                 <div class="form-group">
-                    <label>Name</label>
-                    <input type="text" id="new-name" class="form-control" required>
+                    <label>Full Name</label>
+                    <input type="text" id="new-name" class="form-control" placeholder="John Doe" required>
                 </div>
-                <div class="form-group">
-                    <label>Email</label>
-                    <input type="email" id="new-email" class="form-control" required>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Login Email <span style="font-size: 0.7rem; color: var(--accent-color);">(System)</span></label>
+                        <input type="email" id="new-login-email" class="form-control" placeholder="john.campus" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Real Email <span style="font-size: 0.7rem; color: var(--accent-color);">(Personal)</span></label>
+                        <input type="email" id="new-real-email" class="form-control" placeholder="john@gmail.com" required>
+                    </div>
                 </div>
+
                 <div class="form-group">
-                    <label>Role</label>
+                    <label>Assigned Role</label>
                     <select id="new-role" class="form-control">
                         <option value="Student">Student</option>
                         <option value="Faculty">Faculty</option>
@@ -117,13 +133,15 @@
                         <option value="Security Guard">Security Guard</option>
                     </select>
                 </div>
+                
                 <div class="form-group">
                     <label>Temporary Password</label>
-                    <input type="text" id="new-pwd" class="form-control" required>
+                    <input type="text" id="new-pwd" class="form-control" placeholder="Minimum 8 characters" required>
                 </div>
-                <div style="display: flex; gap: 10px;">
-                    <button type="submit" class="btn btn-accent" style="flex: 1;">Create & Email</button>
-                    <button type="button" class="btn" style="background: #e5e7eb; color: #333;" onclick="document.getElementById('add-user-modal').classList.add('hidden')">Cancel</button>
+
+                <div style="margin-top: 25px; display: flex; gap: 12px;">
+                    <button type="submit" class="btn btn-accent" style="flex: 2; padding: 12px;">Create & Send Email</button>
+                    <button type="button" class="btn" style="flex: 1; background: #E5E7EB; color: #374151;" onclick="document.getElementById('add-user-modal').classList.add('hidden')">Cancel</button>
                 </div>
             </form>
         </div>
@@ -158,11 +176,12 @@
                 users.forEach(u => {
                     tbody.innerHTML += `
                         <tr>
-                            <td>${u.name}</td>
-                            <td>${u.email}</td>
+                            <td><strong>${u.name}</strong></td>
+                            <td>${u.login_email}</td>
+                            <td style="font-size: 0.85rem; color: var(--text-muted);">${u.real_email}</td>
                             <td><span class="role-badge">${u.role}</span></td>
                             <td>
-                                <button class="btn" style="padding: 5px 10px; font-size: 0.8rem; background: #ef4444;" onclick="deleteUser('${u._id}')">Delete</button>
+                                <button class="btn" style="padding: 6px 12px; font-size: 0.75rem; background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca;" onclick="deleteUser('${u.id}')">Delete</button>
                             </td>
                         </tr>
                     `;
@@ -183,13 +202,16 @@
             e.preventDefault();
             const payload = {
                 name: document.getElementById('new-name').value,
-                email: document.getElementById('new-email').value,
+                loginEmail: document.getElementById('new-login-email').value,
+                realEmail: document.getElementById('new-real-email').value,
                 role: document.getElementById('new-role').value,
                 password: document.getElementById('new-pwd').value
             };
 
             const btn = e.target.querySelector('button[type="submit"]');
-            btn.innerText = 'Creating...';
+            const originalText = btn.innerText;
+            btn.innerText = 'Creating & Sending...';
+            btn.disabled = true;
 
             try {
                 const res = await fetch('/api/admin/users', {
@@ -200,17 +222,23 @@
                     },
                     body: JSON.stringify(payload)
                 });
+                
+                const data = await res.json();
+                
                 if(res.ok) {
-                    alert('User created and email sent!');
+                    alert('Success: ' + data.message);
                     document.getElementById('add-user-modal').classList.add('hidden');
                     loadUsers();
                     e.target.reset();
                 } else {
-                    const data = await res.json();
-                    alert(data.message);
+                    alert('Error: ' + data.message);
                 }
-            } catch(e) { alert('Error adding user'); }
-            btn.innerText = 'Create & Email';
+            } catch(e) { 
+                alert('System Error: Could not connect to the server'); 
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
         });
 
         function logout() {
