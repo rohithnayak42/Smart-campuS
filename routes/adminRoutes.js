@@ -5,7 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const {
         addUser, getUsers, deleteUser, updateUser, getStats, getIssues, updateIssueStatus,
-        addSubject, getSubjects, updateSubject, deleteSubject, addSchedule, getSchedules, deleteSchedule,
+        addSubject, getSubjects, updateSubject, deleteSubject, addSchedule, getSchedules, updateSchedule, deleteSchedule,
         addNotice, getNotices, deleteNotice, resetPassword,
         uploadBlueprint, getBlueprints, deleteBlueprint
 } = require('../controllers/adminController');
@@ -24,29 +24,43 @@ const storage = multer.diskStorage({
         }
 });
 const upload = multer({ storage });
-// Admin routes
-router.post('/add-user', adminMiddleware, addUser);
+// User Management
 router.get('/users', adminMiddleware, getUsers);
-router.delete('/delete-user/:id', adminMiddleware, deleteUser);
-router.put('/update-user/:id', adminMiddleware, updateUser);
+router.post('/users', adminMiddleware, addUser);
+router.put('/users/:id', adminMiddleware, updateUser);
+router.delete('/users/:id', adminMiddleware, deleteUser);
+
+// Stats & Dashboard
 router.get('/stats', adminMiddleware, getStats);
 router.get('/issues', adminMiddleware, getIssues);
-router.put('/update-issue/:id', adminMiddleware, updateIssueStatus);
-router.post('/add-subject', adminMiddleware, addSubject);
+router.patch('/issues/:id', adminMiddleware, updateIssueStatus); // Changed to PATCH for status update
+
+// Academic Portfolio (Subjects)
 router.get('/subjects', adminMiddleware, getSubjects);
-router.put('/update-subject/:id', adminMiddleware, updateSubject);
-router.delete('/delete-subject/:id', adminMiddleware, deleteSubject);
-router.post('/add-schedule', adminMiddleware, addSchedule);
+router.post('/subjects', adminMiddleware, addSubject);
+router.put('/subjects/:id', adminMiddleware, updateSubject);
+router.delete('/subjects/:id', adminMiddleware, deleteSubject);
+
+// Class Schedule
 router.get('/schedules', adminMiddleware, getSchedules);
-router.delete('/delete-schedule/:id', adminMiddleware, deleteSchedule);
-router.post('/add-notice', adminMiddleware, addNotice);
+router.post('/schedules', adminMiddleware, addSchedule);
+router.put('/schedules/:id', adminMiddleware, updateSchedule);
+router.delete('/schedules/:id', adminMiddleware, deleteSchedule);
+
+
+// Campus Notices
 router.get('/notices', adminMiddleware, getNotices);
-router.delete('/delete-notice/:id', adminMiddleware, deleteNotice);
+router.get('/notices/live', adminMiddleware, getNotices); // Shortcut for live ones (logic in controller)
+router.post('/notices', adminMiddleware, addNotice);
+router.delete('/notices/:id', adminMiddleware, deleteNotice);
+
+// Miscellaneous
 router.post('/reset-password', adminMiddleware, resetPassword);
-router.post('/upload-blueprint', adminMiddleware, upload.single('blueprint'), uploadBlueprint);
+router.post('/upload-blueprint', adminMiddleware, upload.single('file'), uploadBlueprint); // Changed 'blueprint' to 'file' for simplicity
 router.get('/blueprints', adminMiddleware, getBlueprints);
-router.delete('/delete-blueprint/:id', adminMiddleware, deleteBlueprint);
+router.delete('/blueprints/:id', adminMiddleware, deleteBlueprint);
 
 module.exports = router;
+
 
 

@@ -393,6 +393,21 @@ const getSchedules = async (req, res) => {
         res.status(500).json({ error: 'Server error while fetching timetable' });
     }
 };
+const updateSchedule = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { day, time_slot, subject_name, faculty_name, room, batch } = req.body;
+        
+        await db.query(
+            'UPDATE timetable_schedules SET day = $1, time_slot = $2, subject_name = $3, faculty_name = $4, room = $5, batch = $6 WHERE id = $7',
+            [day, time_slot, subject_name, faculty_name, room, batch, id]
+        );
+        res.json({ message: 'Schedule updated successfully' });
+    } catch (error) {
+        console.error('Error updating schedule:', error);
+        res.status(500).json({ error: 'Server error while updating timetable' });
+    }
+};
 
 // Notices
 const addNotice = async (req, res) => {
@@ -408,7 +423,9 @@ const addNotice = async (req, res) => {
         let expiresAt = null;
         if (duration_hours && parseInt(duration_hours, 10) > 0) {
             const hours = parseInt(duration_hours, 10);
-            expiresAt = new Date(Date.now() + hours * 60 * 60 * 1000).toISOString();
+            const date = new Date();
+            date.setHours(date.getHours() + hours);
+            expiresAt = date.toISOString();
         }
 
         const { rows } = await db.query(
@@ -424,13 +441,25 @@ const addNotice = async (req, res) => {
 
 const getNotices = async (req, res) => {
     try {
-        const { rows } = await db.query('SELECT * FROM campus_notices ORDER BY created_at DESC');
+        // If the path was /notices/live, we only return non-expired ones
+        const isLiveRequest = req.path.includes('/live');
+        let query = 'SELECT * FROM campus_notices';
+        let params = [];
+
+        if (isLiveRequest) {
+            query += ' WHERE expires_at IS NULL OR expires_at > NOW()';
+        }
+
+        query += ' ORDER BY created_at DESC';
+
+        const { rows } = await db.query(query, params);
         res.json(rows);
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });
     }
 };
+
 
 // User Control (Reset PW)
 const resetPassword = async (req, res) => {
@@ -521,7 +550,7 @@ const deleteSchedule = async (req, res) => {
 
 module.exports = { 
     addUser, getUsers, deleteUser, updateUser, getStats, getIssues, updateIssueStatus, 
-    addSubject, getSubjects, updateSubject, deleteSubject, addSchedule, getSchedules, deleteSchedule,
+    addSubject, getSubjects, updateSubject, deleteSubject, addSchedule, getSchedules, updateSchedule, deleteSchedule,
     addNotice, getNotices, deleteNotice, resetPassword,
     uploadBlueprint, getBlueprints, deleteBlueprint
 };

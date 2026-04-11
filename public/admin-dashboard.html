@@ -495,7 +495,18 @@
     </header>
 
     <main>
+        <!-- Live Notice Bar -->
+        <div id="live-notice-wrapper" style="margin-bottom: 25px; display: none;">
+            <div style="background: #1e293b; color: #C5A880; padding: 12px 20px; border-radius: 12px; display:flex; align-items:center; gap:15px; overflow:hidden; border: 1px solid rgba(197, 168, 128, 0.3);">
+                <div style="display:flex; align-items:center; gap:8px; white-space:nowrap; font-weight:800; font-size:12px; border-right: 2px solid rgba(197, 168, 128, 0.3); padding-right:15px;">
+                    <i data-lucide="megaphone" style="width:16px;"></i> LIVE BROADCAST
+                </div>
+                <marquee id="live-notice-ticker" behavior="scroll" direction="left" style="font-weight:600; font-size:14px; color: white;"></marquee>
+            </div>
+        </div>
+
         <!-- Overview (Modern SaaS Style) -->
+
         <div id="overview" class="tab-content active">
             <div class="card-grid">
                 <div class="soft-card" onclick="switchTab('users')" style="cursor:pointer;">
@@ -812,8 +823,31 @@
         </div>
     </div>
 
-    <div id="mod-time" class="glass-modal" onclick="closeM(event, 'mod-time')"><div class="modal-body"><h2>Allocate Resource</h2><form id="t-form" style="display:grid; gap:12px;"><select name="day" class="form-input"><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option></select><input type="text" name="timeSlot" class="form-input" placeholder="Time"><input type="text" name="subjectName" class="form-input" placeholder="Subject"><input type="text" name="facultyName" class="form-input" placeholder="Faculty"><input type="text" name="room" class="form-input" placeholder="Room"><input type="text" name="batch" class="form-input" placeholder="Batch"><button type="submit" class="btn-primary">Allocate</button></form></div></div>
+    <div id="mod-time" class="glass-modal" onclick="closeM(event, 'mod-time')"><div class="modal-body"><h2>Allocate Resource</h2><form id="t-form" style="display:grid; gap:12px;"><select name="day" id="t-day" class="form-input"><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option></select><input type="text" name="timeSlot" id="t-timeSlot" class="form-input" placeholder="Time (e.g. 09:00 - 10:30)"><input type="text" name="subjectName" id="t-subjectName" class="form-input" placeholder="Subject Name"><input type="text" name="facultyName" id="t-facultyName" class="form-input" placeholder="Faculty Name"><input type="text" name="room" id="t-room" class="form-input" placeholder="Room Number"><input type="text" name="batch" id="t-batch" class="form-input" placeholder="Batch (e.g. CSE-A)"><button type="submit" class="btn-primary">Register Slot</button></form></div></div>
+    
+    <div id="mod-edit-time" class="glass-modal" onclick="closeM(event, 'mod-edit-time')">
+        <div class="modal-body">
+            <h2>✏️ Edit Academic Slot</h2>
+            <form id="t-edit-form" style="display:grid; gap:12px; margin-top:20px;">
+                <input type="hidden" name="id" id="edit-time-id">
+                <select name="day" id="edit-time-day" class="form-input">
+                    <option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option>
+                </select>
+                <input type="text" name="time_slot" id="edit-time-slot" class="form-input" placeholder="Time" required>
+                <input type="text" name="subject_name" id="edit-time-subject" class="form-input" placeholder="Subject" required>
+                <input type="text" name="faculty_name" id="edit-time-faculty" class="form-input" placeholder="Faculty">
+                <input type="text" name="room" id="edit-time-room" class="form-input" placeholder="Room">
+                <input type="text" name="batch" id="edit-time-batch" class="form-input" placeholder="Batch">
+                <div style="display: flex; gap: 15px; margin-top: 10px;">
+                    <button type="button" class="btn-secondary" style="background: #E5E7EB; color: #374151; flex: 1;" onclick="document.getElementById('mod-edit-time').style.display='none'">Cancel</button>
+                    <button type="submit" class="btn-primary" style="flex: 1;">✅ Update Slot</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div id="mod-notice" class="glass-modal" onclick="closeM(event, 'mod-notice')"><div class="modal-body"><h2>Compose Notice</h2><form id="n-form" style="display:grid; gap:12px;"><input type="text" name="title" class="form-input" placeholder="Heading"><select name="targetRoles" class="form-input"><option value="Everyone">Everyone</option><option value="student">Students</option><option value="staff">Staff</option><option value="guard">Guards</option><option value="worker">Workers</option></select><select name="duration_hours" class="form-input"><option value="1">1 Hour Duration</option><option value="24" selected>24 Hours Duration</option><option value="48">2 Days Duration</option><option value="0">Indefinite (No Expiry)</option></select><textarea name="message" class="form-input" style="height:100px;" placeholder="Message Body"></textarea><button type="submit" class="btn-secondary" style="width:100%">Broadast Identity</button></form></div></div>
+
     
     <div id="mod-logout-confirm" class="glass-modal" onclick="closeM(event, 'mod-logout-confirm')">
         <div class="modal-body" style="text-align:center; padding:40px;">
@@ -1268,10 +1302,12 @@
                             <div style="margin-top:12px; font-size:11px; color:var(--secondary-text); font-style:italic; border-top: 1px dotted rgba(0,0,0,0.05); padding-top: 8px; display:flex; align-items:center;">
                                 <i data-lucide="user" style="width:11px; height:11px; margin-right:5px; opacity:0.6;"></i>${x.faculty_name || 'Unassigned Faculty'}
                             </div>
-                            <button title="Delete Slot" style="position:absolute; bottom:20px; right:20px; border:none; background:none; cursor:pointer;" onclick="deleteSch(${x.id})">
-                                <i data-lucide="trash-2" style="width:14px; height:14px; color:#EF4444; opacity:0.3;" class="i-del"></i>
-                            </button>
+                            <div style="position:absolute; bottom:20px; right:20px; display:flex; gap:12px;">
+                                <i data-lucide="edit-3" class="action-icon i-edit" style="width:14px; height:14px; opacity:0.6; cursor:pointer;" onclick="handleSchEditClick(${x.id}, '${x.day}', '${x.time_slot}', '${x.subject_name.replace(/'/g, "\\'")}', '${(x.faculty_name || '').replace(/'/g, "\\'")}', '${(x.room || '').replace(/'/g, "\\'")}', '${(x.batch || '').replace(/'/g, "\\'")}')"></i>
+                                <i data-lucide="trash-2" class="action-icon i-del" style="width:14px; height:14px; color:#EF4444; opacity:0.6; cursor:pointer;" onclick="deleteSch(${x.id})"></i>
+                            </div>
                         </div>
+
                     `;
                 });
                 lucide.createIcons();
@@ -1331,6 +1367,40 @@
                 tBox('⚠️ Connection Error');
             }
         }
+
+        function handleSchEditClick(id, day, slot, subject, faculty, room, batch) {
+            document.getElementById('edit-time-id').value = id;
+            document.getElementById('edit-time-day').value = day;
+            document.getElementById('edit-time-slot').value = slot;
+            document.getElementById('edit-time-subject').value = subject;
+            document.getElementById('edit-time-faculty').value = faculty;
+            document.getElementById('edit-time-room').value = room;
+            document.getElementById('edit-time-batch').value = batch;
+            document.getElementById('mod-edit-time').style.display = 'flex';
+        }
+
+        document.getElementById('t-edit-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const data = Object.fromEntries(new FormData(e.target));
+            try {
+                // For simplicity, we use the same POST endpoint but we'll need an UPDATE endpoint 
+                // Wait, I didn't add UPDATE for schedules in routes. Let me check.
+                // Re-checking implementation plan... Ah, I should add PUT /schedules/:id
+                const res = await fetch(`/api/admin/schedules/${data.id}`, {
+                    method: 'PUT', // I need to add this to routes
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tok}` },
+                    body: JSON.stringify(data)
+                });
+                if(res.ok) {
+                    tBox('✅ Schedule Updated');
+                    document.getElementById('mod-edit-time').style.display='none';
+                    refreshData('timetable');
+                } else {
+                    tBox('⚠️ Update failed');
+                }
+            } catch(e) { tBox('Error updating schedule'); }
+        };
+
 
         async function loadNot() {
             const r = await fetch('/api/admin/notices', { headers: { 'Authorization': `Bearer ${tok}` } });
@@ -1474,6 +1544,28 @@
         function logout() { document.getElementById('mod-logout-confirm').style.display='flex'; }
         function confirmLogout() { localStorage.clear(); window.location.href='/auth.html'; }
 
+        // Notice Bar Logic
+        async function updateNoticeBar() {
+            try {
+                const res = await fetch('/api/admin/notices', { headers: { 'Authorization': `Bearer ${tok}` } });
+                const notices = await res.json();
+                const wrapper = document.getElementById('live-notice-wrapper');
+                const ticker = document.getElementById('live-notice-ticker');
+                
+                // Filter active notices (simple check if expires_at is in future or null)
+                const active = notices.filter(n => !n.expires_at || new Date(n.expires_at) > new Date());
+                
+                if (active.length > 0) {
+                    wrapper.style.display = 'block';
+                    ticker.innerHTML = active.map(n => `&nbsp;&bull;&nbsp; ${n.title}: ${n.message}`).join(' &nbsp;&nbsp;&nbsp;&nbsp; ');
+                } else {
+                    wrapper.style.display = 'none';
+                }
+            } catch (e) {
+                console.error('Notice bar update failed');
+            }
+        }
+
         // === INITIALIZATION ===
         (function init() {
             document.querySelectorAll('.tab-content').forEach(function(t) {
@@ -1484,6 +1576,7 @@
             if(ov) { ov.style.display = 'block'; ov.classList.add('active'); }
             if(window.lucide) lucide.createIcons();
             loadStat();
+            updateNoticeBar();
 
             // REAL-TIME AUTO REFRESH (Polling Engine)
             setInterval(() => {
@@ -1491,8 +1584,10 @@
                 if(activeTab) {
                     refreshData(activeTab.id);
                 }
+                updateNoticeBar();
             }, 5000);
         })();
+
     </script>
 </body>
 </html>

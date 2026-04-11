@@ -16,8 +16,6 @@ REQUIRED_VARS.forEach(v => {
 
 const app = express();
 
-// Diagnostic Heartbeat for Deployment Verification
-console.log('--- SYSTEM: App Initialization Started ---');
 db.query('SELECT 1')
   .then(() => console.log('--- SYSTEM: Core Database Heartbeat OK ---'))
   .catch(err => {
@@ -31,20 +29,12 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Path normalization for serverless environments (Root-Standard)
-const PUBLIC_DIR = path.resolve(process.cwd(), 'public');
-const UPLOADS_DIR = path.resolve(process.cwd(), 'uploads');
-
+const PUBLIC_DIR = path.join(__dirname, 'public');
+const UPLOADS_DIR = path.join(__dirname, 'uploads');
 
 console.log('--- SYSTEM: Server Runtime Paths ---');
-console.log('CWD:', process.cwd());
+console.log('Dirname:', __dirname);
 console.log('PUBLIC_DIR:', PUBLIC_DIR);
-
-
-// Support for Dashboard SPA tabs
-const dashboardTabs = ['admin-dashboard', 'users', 'subjects', 'timetable', 'notices', 'blueprint', 'issues'];
-
-// Staff SPA routes
-const staffTabs = ['staff', 'staff/attendance', 'staff/materials', 'staff/doubts', 'staff/admin-queries', 'staff/tests', 'staff/notices'];
 
 // Static file serving
 app.use(express.static(PUBLIC_DIR));
@@ -52,13 +42,7 @@ app.use('/uploads', express.static(UPLOADS_DIR));
 
 // Explicit route for the landing page (Root)
 app.get('/', (req, res) => {
-    res.sendFile(path.join(PUBLIC_DIR, 'index.html'), (err) => {
-        if (err) {
-            console.error('--- ERROR: Landing page (index.html) not found ---');
-            console.error('Path attempted:', path.join(PUBLIC_DIR, 'index.html'));
-            res.status(404).send('Landing Page Not Found - Folder: ' + PUBLIC_DIR);
-        }
-    });
+    res.sendFile(path.join(PUBLIC_DIR, 'index.html'));
 });
 
 
