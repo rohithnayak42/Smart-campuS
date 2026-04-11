@@ -9,6 +9,7 @@
     { "src": "/api/(.*)", "dest": "index.js" },
     { "src": "/auto-login", "dest": "index.js" },
     { "handle": "filesystem" },
+    { "src": "/admin-dashboard(.*)", "dest": "admin-dashboard.html" },
     { "src": "/staff(.*)", "dest": "staff-dashboard.html" },
     { "src": "/student(.*)", "dest": "student-dashboard.html" },
     { "src": "/worker(.*)", "dest": "worker-dashboard.html" },
