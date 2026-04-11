@@ -40,7 +40,7 @@
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
             text-align: center;
             transition: 0.3s ease;
-            animation: float 4s ease-in-out infinite, fadeIn 0.6s ease;
+            animation: fadeIn 0.6s ease; /* Floating removed as requested */
             border: 1px solid rgba(255, 255, 255, 0.3);
             display: flex;
             flex-direction: column;
@@ -245,13 +245,64 @@
             height: 18px;
         }
 
-        /* Animations */
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-8px); }
-            100% { transform: translateY(0px); }
+        .otp-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin: 15px 0 25px;
+            width: 100%;
         }
 
+        .otp-box {
+            width: 100%;
+            height: 55px;
+            text-align: center;
+            font-size: 20px;
+            font-weight: 600;
+            border-radius: 10px;
+            border: 1px solid #e5e7eb;
+            outline: none;
+            transition: 0.2s;
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .otp-box:focus {
+            border-color: #C5A880;
+            box-shadow: 0 0 0 3px rgba(197, 168, 128, 0.2);
+            background: #fff;
+        }
+
+        .resend-container {
+            text-align: center;
+            font-size: 14px;
+            color: #6B7280;
+            margin-bottom: 20px;
+        }
+
+        .resend-btn {
+            background: none;
+            border: none;
+            color: #C5A880;
+            font-weight: 600;
+            cursor: pointer;
+            margin-left: 5px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            transition: 0.2s;
+        }
+
+        .resend-btn:hover:not(:disabled) {
+            background: rgba(197, 168, 128, 0.1);
+            text-decoration: underline;
+        }
+
+        .resend-btn:disabled {
+            color: #9CA3AF;
+            cursor: not-allowed;
+            text-decoration: none;
+        }
+
+        /* Animations */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
@@ -357,12 +408,22 @@
             </div>
             <div class="login-icon"><i data-lucide="mail"></i></div>
             <h2>Verify Identity</h2>
-            <p>Enter the OTP sent to your email.</p>
+            <p>Enter the 6-digit OTP sent to your email.</p>
             <form id="otp-form">
-                <div class="input-group">
-                    <label>OTP Code</label>
-                    <input type="text" id="otp" placeholder="Enter 6-digit code" required>
+                <div class="otp-container">
+                    <input type="text" maxlength="1" class="otp-box" required />
+                    <input type="text" maxlength="1" class="otp-box" required />
+                    <input type="text" maxlength="1" class="otp-box" required />
+                    <input type="text" maxlength="1" class="otp-box" required />
+                    <input type="text" maxlength="1" class="otp-box" required />
+                    <input type="text" maxlength="1" class="otp-box" required />
                 </div>
+                
+                <div class="resend-container">
+                    <span>Didn't receive OTP?</span>
+                    <button type="button" class="resend-btn" onclick="resendOTP()">Resend</button>
+                </div>
+
                 <button type="submit" class="login-btn">Verify Account</button>
             </form>
         </div>
@@ -402,6 +463,19 @@
         function showView(viewId) {
             Object.values(views).forEach(v => v.classList.add('hidden'));
             views[viewId].classList.remove('hidden');
+
+            // Auto-focus first input for specific views
+            if (viewId === 'otp') {
+                const firstOtpBox = document.querySelector('.otp-box');
+                if (firstOtpBox) {
+                    setTimeout(() => firstOtpBox.focus(), 100);
+                }
+            } else if (viewId === 'login') {
+                const emailInput = document.getElementById('email');
+                if (emailInput) {
+                    setTimeout(() => emailInput.focus(), 100);
+                }
+            }
         }
 
         function selectRole(role) {
@@ -422,6 +496,45 @@
         function goBack() { showView('role'); }
         function goBackToLogin() { showView('login'); }
         function showForgotPassword() { showView('forgot'); }
+
+        function resendOTP() {
+            // Logic to trigger backend resend would go here
+            console.log("Resending OTP...");
+            startResendTimer();
+        }
+
+        function startResendTimer() {
+            let time = 30;
+            const btn = document.querySelector(".resend-btn");
+            btn.disabled = true;
+
+            const interval = setInterval(() => {
+                if (time > 0) {
+                    btn.textContent = `Resend in ${time}s`;
+                    time--;
+                } else {
+                    btn.textContent = "Resend";
+                    btn.disabled = false;
+                    clearInterval(interval);
+                }
+            }, 1000);
+        }
+
+        // OTP Auto-focus logic
+        const otpInputs = document.querySelectorAll(".otp-box");
+        otpInputs.forEach((input, index) => {
+            input.addEventListener("input", (e) => {
+                if (e.target.value && index < otpInputs.length - 1) {
+                    otpInputs[index + 1].focus();
+                }
+            });
+
+            input.addEventListener("keydown", (e) => {
+                if (e.key === "Backspace" && !e.target.value && index > 0) {
+                    otpInputs[index - 1].focus();
+                }
+            });
+        });
 
         function togglePassword() {
             const passwordInput = document.getElementById('password');
@@ -478,8 +591,10 @@
         document.getElementById('otp-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = document.getElementById('email').value;
-            const otp = document.getElementById('otp').value;
             const role = document.getElementById('selected-role').value;
+            
+            // Collect OTP from boxes
+            const otp = Array.from(otpInputs).map(input => input.value).join('');
 
             try {
                 const res = await fetch('/api/auth/verify-otp', {
