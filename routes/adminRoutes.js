@@ -49,28 +49,4 @@ router.delete('/delete-blueprint/:id', adminMiddleware, deleteBlueprint);
 
 module.exports = router;
 
-router.post('/add-user', adminMiddleware, addUser);
-router.get('/users', adminMiddleware, getUsers);
-router.delete('/delete-user/:id', adminMiddleware, deleteUser);
-router.put('/update-user/:id', adminMiddleware, updateUser);
-router.get('/stats', adminMiddleware, getStats);
-router.get('/issues', adminMiddleware, getIssues);
-router.put('/update-issue/:id', adminMiddleware, updateIssueStatus);
-router.post('/add-subject', adminMiddleware, addSubject);
-router.get('/subjects', adminMiddleware, getSubjects);
-router.put('/update-subject/:id', adminMiddleware, updateSubject);
-router.delete('/delete-subject/:id', adminMiddleware, deleteSubject);
-router.post('/add-schedule', adminMiddleware, addSchedule);
-router.get('/schedules', adminMiddleware, getSchedules);
-router.delete('/delete-schedule/:id', adminMiddleware, deleteSchedule);
-router.post('/add-notice', adminMiddleware, addNotice);
-router.get('/notices', adminMiddleware, getNotices);
-router.delete('/delete-notice/:id', adminMiddleware, deleteNotice);
-router.post('/reset-password', adminMiddleware, resetPassword);
-router.post('/upload-blueprint', adminMiddleware, upload.single('blueprint'), uploadBlueprint);
-router.get('/blueprints', adminMiddleware, getBlueprints);
-router.delete('/delete-blueprint/:id', adminMiddleware, deleteBlueprint);
-
-module.exports = router;
-
 
