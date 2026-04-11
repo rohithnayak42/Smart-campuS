@@ -5,7 +5,7 @@
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api" },
     { "source": "/auto-login", "destination": "/api" },
-    { "source": "/(users|subjects|timetable|notices|blueprint|issues)", "destination": "/admin-dashboard.html" },
+    { "source": "/", "destination": "/index.html" },
     { "source": "/admin-dashboard", "destination": "/admin-dashboard.html" },
     { "source": "/staff", "destination": "/staff-dashboard.html" },
     { "source": "/student", "destination": "/student-dashboard.html" },
