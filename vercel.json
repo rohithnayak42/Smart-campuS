@@ -1,8 +1,12 @@
 {
+  "version": 2,
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api" },
-    { "source": "/auto-login", "destination": "/api" }
+    {
+      "source": "/(.*)",
+      "destination": "/api"
+    }
   ]
 }
+

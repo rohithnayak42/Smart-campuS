@@ -31,8 +31,13 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Path normalization for serverless environments (Root-Standard)
-const PUBLIC_DIR = path.resolve(__dirname);
-const UPLOADS_DIR = path.resolve(__dirname, 'uploads');
+const PUBLIC_DIR = path.resolve(process.cwd());
+const UPLOADS_DIR = path.resolve(process.cwd(), 'uploads');
+
+console.log('--- SYSTEM: Server Runtime Paths ---');
+console.log('CWD:', process.cwd());
+console.log('PUBLIC_DIR:', PUBLIC_DIR);
+
 
 // Support for Dashboard SPA tabs
 const dashboardTabs = ['admin-dashboard', 'users', 'subjects', 'timetable', 'notices', 'blueprint', 'issues'];
@@ -43,6 +48,18 @@ const staffTabs = ['staff', 'staff/attendance', 'staff/materials', 'staff/doubts
 // Static file serving
 app.use(express.static(PUBLIC_DIR));
 app.use('/uploads', express.static(UPLOADS_DIR));
+
+// Explicit route for the landing page (Root)
+app.get('/', (req, res) => {
+    res.sendFile(path.join(PUBLIC_DIR, 'index.html'), (err) => {
+        if (err) {
+            console.error('--- ERROR: Landing page (index.html) not found ---');
+            console.error('Path attempted:', path.join(PUBLIC_DIR, 'index.html'));
+            res.status(404).send('Landing Page Not Found - System Configuration Issue');
+        }
+    });
+});
+
 
 // DB Init - DEFERRED to /api/health for zero-blocking startup
 // createUserTable();
