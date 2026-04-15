@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Campus | Home</title>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="logo">
+                <i class="fa-solid fa-graduation-cap"></i> Smart Campus
+            </a>
+            <ul class="nav-links">
+                <li><a href="index.html" class="active">Home</a></li>
+                <li><a href="about.html">About</a></li>
+                <li><a href="courses.html">Academics</a></li>
+                <li><a href="facilities.html">Facilities</a></li>
+                <li><a href="gallery.html">Gallery</a></li>
+                <li><a href="contact.html">Contact</a></li>
+            </ul>
+            <div class="nav-right">
+                <a href="/auth.html" class="nav-login-btn">Login</a>
+            </div>
+            <div class="menu-toggle">
+                <i class="fa-solid fa-bars"></i>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="hero">
+        <div class="hero-overlay"></div>
+        <div class="hero-slides">
+            <div class="hero-slide" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/f/fe/Education_Hub-_Diu.jpg/1280px-Education_Hub-_Diu.jpg');"></div>
+            <div class="hero-slide" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Chandrabhaga_Beach%2C_Odisha.jpg/1280px-Chandrabhaga_Beach%2C_Odisha.jpg');"></div>
+            <div class="hero-slide" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/f/fe/Education_Hub-_Diu.jpg/1280px-Education_Hub-_Diu.jpg');"></div>
+        </div>
+        
+        <div class="container hero-content">
+            <div class="hero-text-wrapper text-center">
+                <div class="hero-badge fade-in">IIIT Vadodara — International Campus Diu</div>
+                <h1>Smart Campus OS</h1>
+                <p>A unified digital management platform for IIITV-ICD &mdash; connecting students, faculty, staff and administration in one intelligent ecosystem.</p>
+                <div class="hero-btns justify-center">
+                    <a href="/auth.html" class="btn-hero-login">Login to Portal</a>
+                    <a href="#campus-gallery" class="btn-hero-outline">Explore Campus</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Campus Gallery Section -->
+    <section class="section campus-gallery-section" id="campus-gallery">
+        <div class="container">
+            <div class="section-header fade-in">
+                <h2>Our Campus</h2>
+                <p>IIIT Vadodara International Campus Diu &mdash; a world-class education hub nestled in the serene coastal town of Diu.</p>
+            </div>
+
+            <div class="campus-gallery-grid">
+                <!-- Main featured image -->
+                <div class="campus-img campus-img-featured fade-in">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fe/Education_Hub-_Diu.jpg/1280px-Education_Hub-_Diu.jpg"
+                         alt="Education Hub Diu - IIITV-ICD Campus" loading="lazy">
+                    <div class="campus-img-overlay">
+                        <h4>Education Hub, Diu</h4>
+                        <p>Main Academic Campus</p>
+                    </div>
+                </div>
+
+                <!-- Secondary images -->
+                <div class="campus-img fade-in" style="transition-delay: 0.1s;">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/bc/Diu_Fort_1.jpg/640px-Diu_Fort_1.jpg"
+                         alt="Diu Fort" loading="lazy">
+                    <div class="campus-img-overlay">
+                        <h4>Historic Diu Fort</h4>
+                        <p>Cultural Heritage Nearby</p>
+                    </div>
+                </div>
+
+                <div class="campus-img fade-in" style="transition-delay: 0.2s;">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/Nagoa_beach_in_Diu.jpg/640px-Nagoa_beach_in_Diu.jpg"
+                         alt="Nagoa Beach Diu" loading="lazy">
+                    <div class="campus-img-overlay">
+                        <h4>Nagoa Beach</h4>
+                        <p>5 min from Campus</p>
+                    </div>
+                </div>
+
+                <div class="campus-img fade-in" style="transition-delay: 0.3s;">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Diu_Island_aerial_view.jpg/640px-Diu_Island_aerial_view.jpg"
+                         alt="Diu Island Aerial" loading="lazy">
+                    <div class="campus-img-overlay">
+                        <h4>Diu Island</h4>
+                        <p>Scenic Island Campus Setting</p>
+                    </div>
+                </div>
+
+                <div class="campus-img fade-in" style="transition-delay: 0.4s;">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fe/Education_Hub-_Diu.jpg/640px-Education_Hub-_Diu.jpg"
+                         alt="IIITV-ICD Campus Building" loading="lazy">
+                    <div class="campus-img-overlay">
+                        <h4>Campus Infrastructure</h4>
+                        <p>Modern Academic Facilities</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Campus Info Cards -->
+            <div class="grid-3" style="margin-top: 3rem;">
+                <div class="info-badge fade-in">
+                    <i class="fa-solid fa-location-dot"></i>
+                    <div>
+                        <h4>Location</h4>
+                        <p>Kevdi, Diu &mdash; Union Territory, India</p>
+                    </div>
+                </div>
+                <div class="info-badge fade-in" style="transition-delay: 0.2s;">
+                    <i class="fa-solid fa-building-columns"></i>
+                    <div>
+                        <h4>Established</h4>
+                        <p>IIIT Vadodara-ICD &mdash; Under MoE, Govt. of India</p>
+                    </div>
+                </div>
+                <div class="info-badge fade-in" style="transition-delay: 0.4s;">
+                    <i class="fa-solid fa-land-mine-on"></i>
+                    <div>
+                        <h4>Campus Area</h4>
+                        <p>25-Acre Education Hub Campus, Diu</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Highlights Section -->
+    <section class="section">
+        <div class="container">
+            <div class="section-header fade-in">
+                <h2>Why Smart Campus OS?</h2>
+                <p>Discover what makes our platform the perfect digital backbone for IIITV-ICD.</p>
+            </div>
+            
+            <div class="grid-3">
+                <div class="card card-glass fade-in">
+                    <div class="card-content text-center">
+                        <div class="card-icon" style="margin: 0 auto 1.5rem;">
+                            <i class="fa-solid fa-laptop-code"></i>
+                        </div>
+                        <h3>Digital Campus</h3>
+                        <p>Fully equipped with smart classrooms, campus-wide high-speed Wi-Fi, and digital library access to enhance your learning experience.</p>
+                    </div>
+                </div>
+
+                <div class="card card-glass fade-in" style="transition-delay: 0.2s;">
+                    <div class="card-content text-center">
+                        <div class="card-icon" style="margin: 0 auto 1.5rem;">
+                            <i class="fa-solid fa-briefcase"></i>
+                        </div>
+                        <h3>Top Placements</h3>
+                        <p>Our dedicated career center ensures maximum placement opportunities with top global tier-1 companies and startups.</p>
+                    </div>
+                </div>
+
+                <div class="card card-glass fade-in" style="transition-delay: 0.4s;">
+                    <div class="card-content text-center">
+                        <div class="card-icon" style="margin: 0 auto 1.5rem;">
+                            <i class="fa-solid fa-microscope"></i>
+                        </div>
+                        <h3>Expert Faculty & Labs</h3>
+                        <p>Learn from industry experts and get hands-on experience in our state-of-the-art research and development laboratories.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-grid fade-in">
+                <div class="stat-item">
+                    <h3>20K+</h3>
+                    <p>Alumni Network</p>
+                </div>
+                <div class="stat-item">
+                    <h3>95%</h3>
+                    <p>Placement Rate</p>
+                </div>
+                <div class="stat-item">
+                    <h3>150+</h3>
+                    <p>Expert Faculty</p>
+                </div>
+                <div class="stat-item">
+                    <h3>50+</h3>
+                    <p>Global Partners</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Placements Section -->
+    <section class="section placements-section">
+        <div class="container">
+            <div class="section-header fade-in">
+                <h2>Placement & Career Opportunities</h2>
+                <p>Empowering our students with world-class career starts and industry-leading packages.</p>
+            </div>
+
+            <div class="grid-4">
+                <!-- Placement Rate -->
+                <div class="card fade-in">
+                    <div class="card-content">
+                        <div class="card-icon" style="margin: 0 auto 1.5rem;">
+                            <i class="fa-solid fa-chart-line"></i>
+                        </div>
+                        <span class="highlight-text">95%</span>
+                        <h3>Placement Rate</h3>
+                        <p>Track record of placing students in leading global roles.</p>
+                    </div>
+                </div>
+
+                <!-- Package -->
+                <div class="card fade-in" style="transition-delay: 0.1s;">
+                    <div class="card-content">
+                        <div class="card-icon" style="margin: 0 auto 1.5rem;">
+                            <i class="fa-solid fa-indian-rupee-sign"></i>
+                        </div>
+                        <span class="highlight-text">₹6–10 LPA</span>
+                        <h3>Average Package</h3>
+                        <p>Competitive opportunities ensuring a strong start.</p>
+                    </div>
+                </div>
+
+                <!-- Companies -->
+                <div class="card fade-in" style="transition-delay: 0.2s;">
+                    <div class="card-content">
+                        <div class="card-icon" style="margin: 0 auto 1.5rem;">
+                            <i class="fa-solid fa-building"></i>
+                        </div>
+                        <span class="highlight-text">150+</span>
+                        <h3>Companies</h3>
+                        <p>Broad network of top global recruiting partners.</p>
+                    </div>
+                </div>
+
+                <!-- Support -->
+                <div class="card fade-in" style="transition-delay: 0.3s;">
+                    <div class="card-content">
+                        <div class="card-icon" style="margin: 0 auto 1.5rem;">
+                            <i class="fa-solid fa-user-graduate"></i>
+                        </div>
+                        <span class="highlight-text">Career Support</span>
+                        <h3>Training & Internships</h3>
+                        <p>Comprehensive assistance from campus to career.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recruiter Logo Slider -->
+            <div class="recruiters-header fade-in">
+                <h3>Our Recruiters</h3>
+            </div>
+            
+            <div class="recruiter-slider fade-in">
+                <div class="logo-track">
+                    <!-- Base 13 Logos (Stable Official Highlights) -->
+                    <div class="recruiter-logo">
+                        <div class="logo-wrapper"><img src="https://www.vectorlogo.zone/logos/google/google-ar21.svg" alt="Google"></div>
+                        <span class="company-name">Google</span>
+                    </div>
+                    <div class="recruiter-logo">
+                        <div class="logo-wrapper"><img src="https://www.vectorlogo.zone/logos/microsoft/microsoft-ar21.svg" alt="Microsoft"></div>
+                        <span class="company-name">Microsoft</span>
+                    </div>
+                    <div class="recruiter-logo">
+                        <div class="logo-wrapper"><img src="https://www.vectorlogo.zone/logos/amazon/amazon-ar21.svg" alt="Amazon"></div>
+                        <span class="company-name">Amazon</span>
+                    </div>
+                    <div class="recruiter-logo">
+                        <div class="logo-wrapper"><img src="https://www.vectorlogo.zone/logos/tcs/tcs-official.svg" alt="TCS"></div>
+                        <span class="company-name">TCS</span>
+                    </div>
+                    <div class="recruiter-logo">
+                        <div class="logo-wrapper"><img src="https://www.vectorlogo.zone/logos/infosys/infosys-official.svg" alt="Infosys"></div>
+                        <span class="company-name">Infosys</span>
+                    </div>
+                    <div class="recruiter-logo">
+                        <div class="logo-wrapper"><img src="https://www.vectorlogo.zone/logos/wipro/wipro-official.svg" alt="Wipro"></div>
+                        <span class="company-name">Wipro</span>
+                    </div>
+                    <div class="recruiter-logo">
+                        <div class="logo-wrapper"><img src="https://www.vectorlogo.zone/logos/accenture/accenture-ar21.svg" alt="Accenture"></div>
+                        <span class="company-name">Accenture</span>
+                    </div>
+                    <div class="recruiter-logo">
+                        <div class="logo-wrapper"><img src="https://www.vectorlogo.zone/logos/ibm/ibm-ar21.svg" alt="IBM"></div>
+                        <span class="company-name">IBM</span>
+                    </div>
+                    <div class="recruiter-logo">
+                        <div class="logo-wrapper"><img src="https://www.vectorlogo.zone/logos/meta/meta-ar21.svg" alt="Meta"></div>
+                        <span class="company-name">Meta</span>
+                    </div>
+                    <div class="recruiter-logo">
+                        <div class="logo-wrapper"><img src="https://www.vectorlogo.zone/logos/capgemini/capgemini-official.svg" alt="Capgemini"></div>
+                        <span class="company-name">Capgemini</span>
+                    </div>
+                    <div class="recruiter-logo">
+                        <div class="logo-wrapper"><img src="https://www.vectorlogo.zone/logos/deloitte/deloitte-official.svg" alt="Deloitte"></div>
+                        <span class="company-name">Deloitte</span>
+                    </div>
+                    <div class="recruiter-logo">
+                        <div class="logo-wrapper"><img src="https://www.vectorlogo.zone/logos/cognizant/cognizant-official.svg" alt="Cognizant"></div>
+                        <span class="company-name">Cognizant</span>
+                    </div>
+                    <div class="recruiter-logo">
+                        <div class="logo-wrapper"><img src="https://www.vectorlogo.zone/logos/oracle/oracle-ar21.svg" alt="Oracle"></div>
+                        <span class="company-name">Oracle</span>
+                    </div>
+                    
+                    <!-- Repeat for Smooth Infinite Loop -->
+                    <div class="recruiter-logo">
+                        <div class="logo-wrapper"><img src="https://www.vectorlogo.zone/logos/google/google-ar21.svg" alt="Google"></div>
+                        <span class="company-name">Google</span>
+                    </div>
+                    <div class="recruiter-logo">
+                        <div class="logo-wrapper"><img src="https://www.vectorlogo.zone/logos/microsoft/microsoft-ar21.svg" alt="Microsoft"></div>
+                        <span class="company-name">Microsoft</span>
+                    </div>
+                    <div class="recruiter-logo">
+                        <div class="logo-wrapper"><img src="https://www.vectorlogo.zone/logos/amazon/amazon-ar21.svg" alt="Amazon"></div>
+                        <span class="company-name">Amazon</span>
+                    </div>
+                    <div class="recruiter-logo">
+                        <div class="logo-wrapper"><img src="https://www.vectorlogo.zone/logos/tcs/tcs-official.svg" alt="TCS"></div>
+                        <span class="company-name">TCS</span>
+                    </div>
+                    <div class="recruiter-logo">
+                        <div class="logo-wrapper"><img src="https://www.vectorlogo.zone/logos/infosys/infosys-official.svg" alt="Infosys"></div>
+                        <span class="company-name">Infosys</span>
+                    </div>
+                    <div class="recruiter-logo">
+                        <div class="logo-wrapper"><img src="https://www.vectorlogo.zone/logos/wipro/wipro-official.svg" alt="Wipro"></div>
+                        <span class="company-name">Wipro</span>
+                    </div>
+                    <div class="recruiter-logo">
+                        <div class="logo-wrapper"><img src="https://www.vectorlogo.zone/logos/accenture/accenture-ar21.svg" alt="Accenture"></div>
+                        <span class="company-name">Accenture</span>
+                    </div>
+                    <div class="recruiter-logo">
+                        <div class="logo-wrapper"><img src="https://www.vectorlogo.zone/logos/ibm/ibm-ar21.svg" alt="IBM"></div>
+                        <span class="company-name">IBM</span>
+                    </div>
+                    <div class="recruiter-logo">
+                        <div class="logo-wrapper"><img src="https://www.vectorlogo.zone/logos/meta/meta-ar21.svg" alt="Meta"></div>
+                        <span class="company-name">Meta</span>
+                    </div>
+                    <div class="recruiter-logo">
+                        <div class="logo-wrapper"><img src="https://www.vectorlogo.zone/logos/capgemini/capgemini-official.svg" alt="Capgemini"></div>
+                        <span class="company-name">Capgemini</span>
+                    </div>
+                    <div class="recruiter-logo">
+                        <div class="logo-wrapper"><img src="https://www.vectorlogo.zone/logos/deloitte/deloitte-official.svg" alt="Deloitte"></div>
+                        <span class="company-name">Deloitte</span>
+                    </div>
+                    <div class="recruiter-logo">
+                        <div class="logo-wrapper"><img src="https://www.vectorlogo.zone/logos/cognizant/cognizant-official.svg" alt="Cognizant"></div>
+                        <span class="company-name">Cognizant</span>
+                    </div>
+                    <div class="recruiter-logo">
+                        <div class="logo-wrapper"><img src="https://www.vectorlogo.zone/logos/oracle/oracle-ar21.svg" alt="Oracle"></div>
+                        <span class="company-name">Oracle</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <h3><i class="fa-solid fa-graduation-cap" style="color: var(--secondary-color); margin-right: 10px;"></i>Smart Campus</h3>
+                    <p style="color: rgba(255,255,255,0.7); margin-top: 1rem;">Empowering the next generation of innovators and leaders through world-class digital education.</p>
+                </div>
+                <div class="footer-col">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="about.html">About Us</a></li>
+                        <li><a href="courses.html">Academics</a></li>
+                        <li><a href="facilities.html">Facilities</a></li>
+                        <li><a href="contact.html">Contact Us</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h3>Contact Info</h3>
+                    <ul>
+                        <li><i class="fa-solid fa-location-dot" style="margin-right: 10px;"></i> PW9Q+CH2, Diu, Dadra and Nagar Haveli and Daman and Diu 362520</li>
+                        <li><i class="fa-solid fa-phone" style="margin-right: 10px;"></i> +91 9908058796</li>
+                        <li><i class="fa-solid fa-envelope" style="margin-right: 10px;"></i> rohithazmeera3@gmail.com</li>
+                    </ul>
+                    <div class="social-links">
+                        <a href="https://github.com/rohithnayak42" target="_blank"><i class="fa-brands fa-github"></i></a>
+                        <a href="https://www.linkedin.com/in/rohith-nayak-a9a87132b/" target="_blank"><i class="fa-brands fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Smart Campus. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JS -->
+    <script src="js/script.js"></script>
+</body>
+</html>
