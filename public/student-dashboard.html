@@ -481,7 +481,7 @@
     <script>
         const tok = localStorage.getItem('sc_token');
         const storedRole = (localStorage.getItem('sc_role') || '').toLowerCase();
-        if(!tok || storedRole !== 'student') window.location.href = '/auth.html';
+        if(!tok || (storedRole !== 'student' && storedRole !== 'students')) window.location.href = '/auth.html';
 
         function tBox(msg) {
             const t = document.getElementById('t-bin');

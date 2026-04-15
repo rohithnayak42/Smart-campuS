@@ -460,7 +460,7 @@
     <script>
         const tok = localStorage.getItem('sc_token');
         const storedRole = (localStorage.getItem('sc_role') || '').toLowerCase();
-        if(!tok || storedRole !== 'worker') window.location.href = '/auth.html';
+        if(!tok || (storedRole !== 'worker' && storedRole !== 'workers')) window.location.href = '/auth.html';
 
         function tBox(msg) {
             const t = document.getElementById('t-bin');

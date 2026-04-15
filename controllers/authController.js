@@ -6,8 +6,12 @@ const { sendEmail } = require('../utils/mailer');
 const login = async (req, res) => {
     try {
         const { email, password, role } = req.body;
-        
-        const { rows } = await db.query('SELECT * FROM users WHERE email = $1 AND LOWER(role) = LOWER($2)', [email, role]);
+        let normalizedRole = role.toLowerCase();
+        if (normalizedRole === 'student') normalizedRole = 'students';
+        if (normalizedRole === 'worker') normalizedRole = 'workers';
+        if (normalizedRole === 'guard') normalizedRole = 'guards';
+
+        const { rows } = await db.query('SELECT * FROM users WHERE email = $1 AND LOWER(role) = LOWER($2)', [email, normalizedRole]);
         const user = rows[0];
 
         if (!user) {
@@ -57,8 +61,12 @@ const login = async (req, res) => {
 const verifyOtp = async (req, res) => {
     try {
         const { email, otp, role } = req.body;
+        let normalizedRole = role.toLowerCase();
+        if (normalizedRole === 'student') normalizedRole = 'students';
+        if (normalizedRole === 'worker') normalizedRole = 'workers';
+        if (normalizedRole === 'guard') normalizedRole = 'guards';
         
-        const { rows } = await db.query('SELECT * FROM users WHERE email = $1 AND role = $2', [email, role]);
+        const { rows } = await db.query('SELECT * FROM users WHERE email = $1 AND LOWER(role) = LOWER($2)', [email, normalizedRole]);
         const user = rows[0];
 
         if (!user || user.otp !== otp || new Date(user.otp_expiry) < new Date()) {
@@ -100,8 +108,12 @@ const changePassword = async (req, res) => {
 const resendOtp = async (req, res) => {
     try {
         const { email, role } = req.body;
+        let normalizedRole = role.toLowerCase();
+        if (normalizedRole === 'student') normalizedRole = 'students';
+        if (normalizedRole === 'worker') normalizedRole = 'workers';
+        if (normalizedRole === 'guard') normalizedRole = 'guards';
         
-        const { rows } = await db.query('SELECT id, email FROM users WHERE email = $1 AND LOWER(role) = LOWER($2)', [email, role]);
+        const { rows } = await db.query('SELECT id, email FROM users WHERE email = $1 AND LOWER(role) = LOWER($2)', [email, normalizedRole]);
         const user = rows[0];
 
         if (!user) {
