@@ -1949,6 +1949,10 @@
                 audience: selectedRoles
             };
 
+            // Fix local datetime missing timezone data (ISO conversion standardizes to UTC)
+            if (data.start_time) data.start_time = new Date(data.start_time).toISOString();
+            if (data.expires_at) data.expires_at = new Date(data.expires_at).toISOString();
+
             // Ensure duration is sent as number
             if(data.duration_hours) data.duration_hours = parseInt(data.duration_hours);
 
