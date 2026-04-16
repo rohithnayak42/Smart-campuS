@@ -444,14 +444,42 @@
                 <a href="#" onclick="goBackToLogin()" class="back-btn">← Back</a>
             </div>
             <div class="login-icon"><i data-lucide="key"></i></div>
-            <h2>Reset Your Password</h2>
-            <p>Enter your email to receive a reset link</p>
+            <h2>Password Recovery</h2>
+            <p>Enter your registered email to receive an OTP</p>
             <form id="forgot-form">
+                <div id="forgot-error" class="error-message"></div>
                 <div class="input-group">
-                    <label>Email Address</label>
+                    <label>Registered Email Address</label>
                     <input type="email" id="forgot-email" placeholder="name@campus.edu" required>
                 </div>
-                <button type="submit" class="login-btn">Send Reset Link</button>
+                <button type="submit" class="login-btn" id="forgot-btn-submit">
+                    <span style="display:flex; align-items:center; justify-content:center;"><span class="btn-text">Send OTP</span></span>
+                </button>
+            </form>
+        </div>
+
+        <!-- Forgot Password OTP View -->
+        <div class="login-card hidden" id="forgot-otp-view">
+            <div class="top-bar">
+                <a href="#" onclick="showView('forgot')" class="back-btn">← Back</a>
+            </div>
+            <div class="login-icon"><i data-lucide="shield-check"></i></div>
+            <h2>Verify OTP</h2>
+            <p id="forgot-masked-msg">Check your email for the OTP code</p>
+            <form id="forgot-otp-form">
+                <input type="hidden" id="reset-userId">
+                <div id="forgot-otp-error" class="error-message"></div>
+                <div class="otp-container" id="forgot-otp-inputs">
+                    <input type="text" maxlength="1" class="otp-box-forgot" required />
+                    <input type="text" maxlength="1" class="otp-box-forgot" required />
+                    <input type="text" maxlength="1" class="otp-box-forgot" required />
+                    <input type="text" maxlength="1" class="otp-box-forgot" required />
+                    <input type="text" maxlength="1" class="otp-box-forgot" required />
+                    <input type="text" maxlength="1" class="otp-box-forgot" required />
+                </div>
+                <button type="submit" class="login-btn" id="forgot-otp-btn-submit">
+                    <span style="display:flex; align-items:center; justify-content:center;"><span class="btn-text">Verify & Reset</span></span>
+                </button>
             </form>
         </div>
 
@@ -534,7 +562,8 @@
             login: document.getElementById('login-form-view'),
             otp: document.getElementById('otp-view'),
             changePass: document.getElementById('change-pass-view'),
-            forgot: document.getElementById('forgot-password-view')
+            forgot: document.getElementById('forgot-password-view'),
+            forgotOtp: document.getElementById('forgot-otp-view')
         };
 
         const roleIcons = {
@@ -837,6 +866,95 @@
                 btn.style.cursor = 'pointer';
                 btnText.textContent = 'Update & Continue';
             }
+        });
+
+        // Forgot Password Flow
+        document.getElementById('forgot-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('forgot-email').value;
+            const btn = document.getElementById('forgot-btn-submit');
+            const errBox = document.getElementById('forgot-error');
+            const btnText = btn.querySelector('.btn-text');
+
+            errBox.style.display = 'none';
+            btn.disabled = true;
+            btnText.innerHTML = `<i data-lucide="loader-2" class="spinner"></i> Sending...`;
+            if (window.lucide) lucide.createIcons();
+
+            try {
+                const res = await fetch('/api/auth/forgot-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+                const data = await res.json();
+                if(!res.ok) {
+                    errBox.textContent = data.message;
+                    errBox.style.display = 'block';
+                } else {
+                    document.getElementById('reset-userId').value = data.userId;
+                    document.getElementById('forgot-masked-msg').textContent = `OTP sent to: ${data.maskedEmail}`;
+                    showView('forgotOtp');
+                }
+            } catch(e) { 
+                errBox.textContent = "Network error."; errBox.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btnText.textContent = "Send OTP";
+            }
+        });
+
+        document.getElementById('forgot-otp-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const userId = document.getElementById('reset-userId').value;
+            const otpInputs = document.querySelectorAll(".otp-box-forgot");
+            const otp = Array.from(otpInputs).map(input => input.value).join('');
+            const btn = document.getElementById('forgot-otp-btn-submit');
+            const errBox = document.getElementById('forgot-otp-error');
+            const btnText = btn.querySelector('.btn-text');
+
+            if(otp.length < 6) return;
+
+            errBox.style.display = 'none';
+            btn.disabled = true;
+            btnText.innerHTML = `<i data-lucide="loader-2" class="spinner"></i> Verifying...`;
+            if (window.lucide) lucide.createIcons();
+
+            try {
+                const res = await fetch('/api/auth/verify-forgot-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId, otp })
+                });
+                const data = await res.json();
+                if(!res.ok) {
+                    errBox.textContent = data.message;
+                    errBox.style.display = 'block';
+                } else {
+                    document.getElementById('change-pass-userid').value = data.userId;
+                    showView('changePass');
+                }
+            } catch(e) {
+                errBox.textContent = "Network error."; errBox.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btnText.textContent = "Verify & Reset";
+            }
+        });
+
+        // Forgot OTP Auto-focus logic
+        const forgotOtpInputs = document.querySelectorAll(".otp-box-forgot");
+        forgotOtpInputs.forEach((input, index) => {
+            input.addEventListener("input", (e) => {
+                if (e.target.value && index < forgotOtpInputs.length - 1) {
+                    forgotOtpInputs[index + 1].focus();
+                }
+            });
+            input.addEventListener("keydown", (e) => {
+                if (e.key === "Backspace" && !e.target.value && index > 0) {
+                    forgotOtpInputs[index - 1].focus();
+                }
+            });
         });
 
         // Live Password Validation & Matching

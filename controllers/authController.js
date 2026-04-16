@@ -149,4 +149,60 @@ const resendOtp = async (req, res) => {
     }
 };
 
-module.exports = { login, verifyOtp, changePassword, resendOtp };
+const forgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+        // Search by login email OR real personal email
+        const { rows } = await db.query('SELECT id, name, email, real_email FROM users WHERE email = $1 OR real_email = $1', [email]);
+        const user = rows[0];
+
+        if (!user) {
+            return res.status(404).json({ message: 'No registered account found with this email.' });
+        }
+
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const otpExpiry = new Date(Date.now() + 5 * 60000); // 5 mins
+
+        await db.query('UPDATE users SET otp = $1, otp_expiry = $2 WHERE id = $3', [otp, otpExpiry, user.id]);
+
+        const otpTargetEmail = user.real_email || user.email;
+        const maskedEmail = otpTargetEmail.replace(/(.{2}).+(@.+)/, "$1*****$2");
+
+        try {
+            await sendEmail(
+                otpTargetEmail,
+                'Smart Campus - Password Reset OTP',
+                `Hello ${user.name}, Your password reset OTP is: ${otp}. It is valid for 5 minutes.`
+            );
+            return res.json({ message: 'OTP sent successfully', maskedEmail, userId: user.id });
+        } catch (err) {
+            console.error('Forgot Password Email Error:', err.message);
+            return res.status(500).json({ message: 'Failed to send OTP. Please try again later.' });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
+const verifyForgotOtp = async (req, res) => {
+    try {
+        const { userId, otp } = req.body;
+        const { rows } = await db.query('SELECT * FROM users WHERE id = $1', [userId]);
+        const user = rows[0];
+
+        if (!user || user.otp !== otp || new Date(user.otp_expiry) < new Date()) {
+            return res.status(400).json({ message: 'Invalid or expired OTP.' });
+        }
+
+        // OTP verified - clear it
+        await db.query('UPDATE users SET otp = NULL, otp_expiry = NULL WHERE id = $1', [user.id]);
+        
+        res.json({ message: 'OTP verified. You can now reset your password.', userId: user.id });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
+module.exports = { login, verifyOtp, changePassword, resendOtp, forgotPassword, verifyForgotOtp };
