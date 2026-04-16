@@ -312,9 +312,10 @@ const getMaterials = async (req, res) => {
 const getStudentsByBatch = async (req, res) => {
     try {
         const { batch } = req.query;
-        let query = "SELECT id, name, email as login_email, real_email, batch FROM users WHERE role = 'student'";
+        // Search for 'students' role as it's normalized in adminController
+        let query = "SELECT id, name, email as login_email, real_email, batch FROM users WHERE (role = 'students' OR role = 'student')";
         const params = [];
-        if (batch) {
+        if (batch && batch !== 'all') {
             query += " AND batch = $1";
             params.push(batch);
         }
@@ -329,18 +330,31 @@ const getStudentsByBatch = async (req, res) => {
 const markStudentAttendance = async (req, res) => {
     try {
         const { schedule_id, subject, batch, attendanceData } = req.body;
-        // attendanceData is an array of { student_id, student_name, status }
         
+        // Ensure student_attendance table exists
+        await db.query(`CREATE TABLE IF NOT EXISTS student_attendance (
+            id SERIAL PRIMARY KEY,
+            schedule_id INTEGER,
+            student_id INTEGER,
+            student_name VARCHAR(255),
+            subject VARCHAR(255),
+            batch VARCHAR(50),
+            status VARCHAR(20),
+            marked_by INTEGER,
+            date DATE DEFAULT CURRENT_DATE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )`);
+
         for (const record of attendanceData) {
             await db.query(
-                `INSERT INTO student_attendance (schedule_id, student_id, student_name, subject, batch, status, marked_by)
-                 VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-                [schedule_id, record.student_id, record.student_name, subject, batch, record.status, req.user.id]
+                `INSERT INTO student_attendance (schedule_id, student_id, student_name, subject, batch, status, marked_by, date)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_DATE)`,
+                [schedule_id, record.student_id, record.student_name, subject, batch || 'General', record.status, req.user.id]
             );
         }
         res.json({ success: true, message: 'Student attendance recorded' });
     } catch (error) {
-        console.error(error);
+        console.error('Error in markStudentAttendance:', error);
         res.status(500).json({ error: 'Server error marking student attendance' });
     }
 };

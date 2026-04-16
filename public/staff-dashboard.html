@@ -607,7 +607,7 @@
             document.getElementById('att-batch-info').textContent = `Target: ${attendanceTarget.subject}`;
             const rows = document.getElementById('attendance-rows');
             rows.innerHTML = students.map(s => `
-                <tr data-sid="${s.id}" data-sname="${s.name}">
+                <tr data-sid="${s.id}" data-sname="${s.name}" data-batch="${s.batch || 'General'}">
                     <td style="font-weight:600;">${s.name}</td>
                     <td style="font-size: 13px; color:var(--secondary-text);">${s.login_email}</td>
                     <td>
@@ -633,7 +633,11 @@
             await fetch('/api/stakeholder/faculty/attendance', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tok}` },
-                body: JSON.stringify({ schedule_id: attendanceTarget.id, subject: attendanceTarget.subject })
+                body: JSON.stringify({ 
+                    schedule_id: attendanceTarget.id, 
+                    subject: attendanceTarget.subject,
+                    batch: rows[0]?.getAttribute('data-batch') || 'General'
+                })
             });
 
             // Now log the individual student statuses
@@ -643,6 +647,7 @@
                 body: JSON.stringify({
                     schedule_id: attendanceTarget.id,
                     subject: attendanceTarget.subject,
+                    batch: rows[0]?.getAttribute('data-batch') || 'General',
                     attendanceData: attendanceData
                 })
             });
