@@ -23,8 +23,11 @@ const login = async (req, res) => {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
 
-        if (user.is_first_login && user.role.toLowerCase() !== 'admin') {
-            return res.json({ message: 'First login, change password required', step: 'CHANGE_PASSWORD', userId: user.id });
+        if (user.is_first_login) {
+            // For Admin, we still want OTP first if they are admin, so we'll skip this if role is admin and handle it in verifyOtp.
+            if (user.role.toLowerCase() !== 'admin') {
+                return res.json({ message: 'First login, change password required', step: 'CHANGE_PASSWORD', userId: user.id });
+            }
         }
 
         if (user.role.toLowerCase() === 'admin') {
@@ -74,6 +77,10 @@ const verifyOtp = async (req, res) => {
         }
 
         await db.query('UPDATE users SET otp = NULL, otp_expiry = NULL WHERE id = $1', [user.id]);
+
+        if (user.is_first_login) {
+            return res.json({ message: 'First login, change password required', step: 'CHANGE_PASSWORD', userId: user.id });
+        }
 
         const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1d' });
         res.json({ message: 'Login successful', token, role: user.role });

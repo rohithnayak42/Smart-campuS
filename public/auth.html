@@ -318,6 +318,42 @@
             display: none;
             width: 100%;
         }
+
+        .pwd-rules {
+            text-align: left;
+            padding: 12px;
+            background: rgba(0,0,0,0.03);
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 11px;
+            color: #6B7280;
+        }
+        .pwd-rules ul {
+            padding-left: 18px;
+            margin: 5px 0 0;
+        }
+        .error-box {
+            background: #FEE2E2;
+            color: #B91C1C;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            margin-bottom: 15px;
+            display: none;
+            text-align: center;
+            border: 1px solid #FECACA;
+        }
+
+        .rule-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+            transition: 0.3s;
+        }
+        .rule-item.valid { color: #10B981; }
+        .rule-item.invalid { color: #EF4444; }
+        .rule-item i { width: 12px; height: 12px; }
     </style>
 </head>
 <body>
@@ -447,16 +483,31 @@
         <div class="login-card hidden" id="change-pass-view">
             <div class="login-icon"><i data-lucide="lock"></i></div>
             <h2>Set New Password</h2>
-            <p>Required for your first secure login.</p>
+            <p>Create a strong password to secure your account</p>
+            
             <form id="change-pass-form">
-                <div id="pwd-error" class="error-message"></div>
+                <div id="pwd-error" class="error-box"></div>
                 <input type="hidden" id="change-pass-userid">
+                
+                <div class="pwd-rules" id="live-validation">
+                    <div class="rule-item" data-rule="length"><i data-lucide="circle"></i> At least 8 characters</div>
+                    <div class="rule-item" data-rule="upper"><i data-lucide="circle"></i> 1 uppercase letter</div>
+                    <div class="rule-item" data-rule="number"><i data-lucide="circle"></i> 1 number (0-9)</div>
+                    <div class="rule-item" data-rule="special"><i data-lucide="circle"></i> 1 special character (@$!%*?&)</div>
+                </div>
+
                 <div class="input-group">
                     <label>New Password</label>
-                    <input type="password" id="new-pwd" placeholder="Minimum 6 characters" required>
+                    <input type="password" id="new-pwd" placeholder="Enter strong password" required>
                 </div>
+
+                <div class="input-group">
+                    <label>Confirm Password</label>
+                    <input type="password" id="confirm-pwd" placeholder="Confirm password" required>
+                </div>
+
                 <button type="submit" class="login-btn" id="pwd-btn-submit">
-                    <span style="display:flex; align-items:center; justify-content:center;"><span class="btn-text">Update & Login</span></span>
+                    <span style="display:flex; align-items:center; justify-content:center;"><span class="btn-text">Update & Continue</span></span>
                 </button>
             </form>
         </div>
@@ -721,15 +772,31 @@
             e.preventDefault();
             const userId = document.getElementById('change-pass-userid').value;
             const newPassword = document.getElementById('new-pwd').value;
+            const confirmPassword = document.getElementById('confirm-pwd').value;
             const btn = document.getElementById('pwd-btn-submit');
             const errBox = document.getElementById('pwd-error');
             const btnText = btn.querySelector('.btn-text');
+
+            // Strong Password Regex
+            const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
+
+            if (newPassword !== confirmPassword) {
+                errBox.textContent = "⚠️ Passwords do not match!";
+                errBox.style.display = 'block';
+                return;
+            }
+
+            if (!passwordRegex.test(newPassword)) {
+                errBox.textContent = "⚠️ Password must have 1 uppercase, 1 number, 1 special character and min 8 chars";
+                errBox.style.display = 'block';
+                return;
+            }
 
             errBox.style.display = 'none';
             btn.disabled = true;
             btn.style.opacity = '0.7';
             btn.style.cursor = 'not-allowed';
-            btnText.innerHTML = `<i data-lucide="loader-2" class="spinner"></i> Updating...`;
+            btnText.innerHTML = `<i data-lucide="loader-2" class="spinner"></i> Syncing...`;
             if (window.lucide) lucide.createIcons();
 
             try {
@@ -743,16 +810,45 @@
                     errBox.textContent = data.message || "Could not update the password.";
                     errBox.style.display = 'block';
                 }
-                else handleLoginSuccess(data.token, data.role);
+                else {
+                    handleLoginSuccess(data.token, data.role.toLowerCase());
+                }
             } catch (err) { 
-                errBox.textContent = 'Network error preventing password registry reset.';
+                errBox.textContent = 'Network error during security update.';
                 errBox.style.display = 'block';
             } finally {
                 btn.disabled = false;
                 btn.style.opacity = '1';
                 btn.style.cursor = 'pointer';
-                btnText.textContent = 'Update & Login';
+                btnText.textContent = 'Update & Continue';
             }
+        });
+
+        // Live Password Validation
+        document.getElementById('new-pwd').addEventListener('input', (e) => {
+            const val = e.target.value;
+            const rules = {
+                length: val.length >= 8,
+                upper: /[A-Z]/.test(val),
+                number: /[0-9]/.test(val),
+                special: /[@$!%*?&]/.test(val)
+            };
+
+            for (const [key, valid] of Object.entries(rules)) {
+                const el = document.querySelector(`.rule-item[data-rule="${key}"]`);
+                const icon = el.querySelector('i');
+                if (valid) {
+                    el.classList.add('valid');
+                    el.classList.remove('invalid');
+                    icon.setAttribute('data-lucide', 'check-circle');
+                } else {
+                    el.classList.remove('valid');
+                    if (val.length > 0) el.classList.add('invalid');
+                    else el.classList.remove('invalid');
+                    icon.setAttribute('data-lucide', 'circle');
+                }
+            }
+            if (window.lucide) lucide.createIcons();
         });
 
         window.addEventListener('DOMContentLoaded', () => {
